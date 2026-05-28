@@ -1111,9 +1111,13 @@ function getLevel() {
 }
 
 // ══ QUESTION LOADING ══
+// Incremented on every load call — callbacks check against this to discard stale responses
+let _questionLoadId = 0;
+
 async function loadNextQuestion() {
   const gs = gameState;
   if (gs.currentQ >= gs.totalQ) { endGame(); return; }
+  const myLoadId = ++_questionLoadId; // capture this call's ID
   const qz = document.getElementById('questionZone');
   qz.innerHTML = `<div class="loading-zone"><div class="spinner"></div> Generating question…</div>`;
 
@@ -1180,6 +1184,8 @@ RULES:
       await new Promise(r => setTimeout(r,600));
       loadNextQuestion(); return;
     }
+    // Discard if a newer load started while this API call was in flight
+    if (myLoadId !== _questionLoadId) return;
     displayQuestion(q, topic);
   } catch(err) {
     qz.innerHTML = `<div class="loading-zone" style="color:var(--red);flex-direction:column;gap:0.5rem"><div>⚠ Error: ${err.message}</div><div style="font-size:0.75rem;color:var(--muted)">Check console (F12) for details</div><button onclick="loadNextQuestion()" style="margin-top:8px;background:var(--yellow);color:#000;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-weight:700">Retry</button></div>`;
@@ -1216,6 +1222,8 @@ async function callClaude(userPrompt, maxTok) {
   return data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
 }
 
+let _questionReadyAt = 0; // timestamp when current question became answerable
+
 function displayQuestion(q, topic) {
   gameState._currentQ = q;
   gameState._currentTopic = topic;
@@ -1240,6 +1248,7 @@ function displayQuestion(q, topic) {
     <button class="next-btn" id="nextBtn" onclick="afterQuestion()">Next Question →</button>
   `;
   gameState._options = q.options;
+  _questionReadyAt = Date.now(); // guard against phantom clicks on freshly rendered buttons
   if (finisherReady) _markQuestionAsFinisher(qz);
 }
 
@@ -1446,6 +1455,8 @@ function renderGrid(v) {
 }
 
 function submitAnswer(idx) {
+  // Block phantom clicks that land on freshly rendered buttons (< 300ms after render)
+  if (Date.now() - _questionReadyAt < 300) return;
   const gs = gameState;
   const q = gs._currentQ;
   const topic = gs._currentTopic;
@@ -2880,6 +2891,9 @@ function showPerfectOverlay(streak) {
 
 
 function afterQuestion() {
+  // Disable immediately so rapid taps can't fire two concurrent loads
+  const btn = document.getElementById('nextBtn');
+  if (btn) btn.disabled = true;
   const gs = gameState;
   if (gs.playerHp<=0 || gs.enemyHp<=0 || gs.currentQ>=gs.totalQ) endGame();
   else loadNextQuestion();
