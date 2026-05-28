@@ -1,0 +1,2747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Brawl — Invincible Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+  --yellow: #FFD600;
+  --red: #E53935;
+  --blue: #1565C0;
+  --green: #2E7D32;
+  --dark: #0a0a0f;
+  --panel: #13131a;
+  --card: #1e1e2e;
+  --border: #2e2e4e;
+  --text: #f0f0ff;
+  --muted: #888aaa;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--dark);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial-gradient(circle,#ffffff08 1px,transparent 1px);background-size:20px 20px;pointer-events:none;}
+
+/* ── CAMP DASHBOARD ── */
+#screen-camp{align-items:stretch;z-index:1;overflow-y:auto;padding:1.5rem;gap:1.5rem;}
+.camp-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.camp-title{font-family:'Bangers',cursive;font-size:2.5rem;letter-spacing:4px;color:var(--yellow);text-shadow:3px 3px 0 #000;}
+.camp-sub{font-size:0.85rem;color:var(--muted);font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.days-row{display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;}
+.day-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:1rem 0.75rem;text-align:center;position:relative;overflow:hidden;}
+.day-card.today{border-color:var(--yellow);box-shadow:0 0 20px #FFD60033;}
+.day-card.done{border-color:#2E7D32;opacity:0.85;}
+.day-card.future{opacity:0.45;}
+.day-label{font-family:'Bangers',cursive;font-size:1rem;letter-spacing:2px;color:var(--yellow);}
+.day-date{font-size:0.7rem;color:var(--muted);margin-bottom:0.5rem;}
+.day-sessions{font-size:1.8rem;font-weight:900;}
+.day-acc{font-size:0.75rem;color:var(--muted);}
+.day-badge{position:absolute;top:6px;right:6px;font-size:0.7rem;background:var(--yellow);color:#000;border-radius:4px;padding:1px 6px;font-weight:900;}
+
+.camp-section-title{font-family:'Bangers',cursive;font-size:1.5rem;letter-spacing:3px;color:var(--yellow);}
+.overall-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.75rem;}
+.stat-mini{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.8rem;text-align:center;}
+.stat-mini-val{font-family:'Bangers',cursive;font-size:2rem;color:var(--yellow);letter-spacing:2px;}
+.stat-mini-lbl{font-size:0.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+.topic-mastery{display:flex;flex-direction:column;gap:0.5rem;}
+.pillar-row{display:flex;align-items:center;gap:0.75rem;}
+.pillar-label{font-size:0.78rem;font-weight:700;color:var(--muted);width:160px;flex-shrink:0;text-align:right;}
+.pillar-track{flex:1;height:14px;background:#111;border-radius:7px;overflow:hidden;}
+.pillar-fill{height:100%;border-radius:7px;transition:width 0.6s;}
+.pillar-pct{font-size:0.75rem;font-weight:700;color:var(--text);width:36px;text-align:right;}
+.pillar-count{font-size:0.7rem;color:var(--muted);width:60px;}
+
+.session-log{display:flex;flex-direction:column;gap:0.5rem;max-height:280px;overflow-y:auto;}
+.session-row{display:flex;align-items:center;gap:0.75rem;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.9rem;font-size:0.85rem;}
+.session-row .sr-char{font-size:1.2rem;}
+.session-row .sr-info{flex:1;color:var(--muted);}
+.session-row .sr-score{font-family:'Bangers',cursive;font-size:1.1rem;color:var(--yellow);}
+.session-row .sr-pct{font-size:0.8rem;font-weight:700;}
+
+.btn-main{font-family:'Bangers',cursive;font-size:1.8rem;letter-spacing:3px;background:var(--yellow);color:#000;border:none;padding:0.8rem 3rem;border-radius:8px;cursor:pointer;transition:all 0.15s;box-shadow:4px 4px 0 #000;}
+.btn-main:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #000;}
+.btn-main:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #000;}
+.btn-main:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.btn-secondary{font-family:'Bangers',cursive;font-size:1.1rem;letter-spacing:2px;background:transparent;color:var(--yellow);border:2px solid var(--yellow);padding:0.5rem 1.5rem;border-radius:8px;cursor:pointer;transition:all 0.15s;}
+.btn-secondary:hover{background:var(--yellow);color:#000;}
+.btn-danger{font-family:'Bangers',cursive;font-size:0.9rem;letter-spacing:1px;background:transparent;color:var(--red);border:1px solid var(--red);padding:0.4rem 1rem;border-radius:6px;cursor:pointer;}
+.btn-danger:hover{background:var(--red);color:#fff;}
+
+.exam-countdown{background:linear-gradient(135deg,#1a0a00,#2a1000);border:2px solid var(--yellow);border-radius:12px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.exam-days{font-family:'Bangers',cursive;font-size:3rem;color:var(--yellow);letter-spacing:4px;}
+.exam-info{font-size:0.85rem;color:var(--muted);}
+.readiness-bar-wrap{flex:1;min-width:140px;}
+.readiness-label{font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+.readiness-bar{height:12px;background:#111;border-radius:6px;overflow:hidden;}
+.readiness-fill{height:100%;border-radius:6px;transition:width 0.8s;}
+
+/* ── TITLE / CHAR SELECT ── */
+#screen-title{align-items:center;justify-content:center;text-align:center;position:relative;z-index:1;gap:1.5rem;padding:2rem;}
+.title-logo{font-family:'Bangers',cursive;font-size:clamp(3rem,10vw,5rem);letter-spacing:4px;color:var(--yellow);text-shadow:4px 4px 0 #000,-2px -2px 0 var(--red);line-height:1;}
+.title-sub{font-family:'Bangers',cursive;font-size:clamp(1rem,3vw,1.6rem);letter-spacing:6px;color:var(--red);}
+.char-select-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem;width:100%;max-width:700px;}
+.char-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:1rem 0.75rem;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.char-card:hover{border-color:var(--yellow);transform:translateY(-3px);}
+.char-card.selected{border-color:var(--yellow);background:#2a2a1a;box-shadow:0 0 20px #FFD60044;}
+.char-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--char-color,var(--yellow));}
+.char-avatar{font-size:2.5rem;margin-bottom:0.4rem;}
+.char-name{font-family:'Bangers',cursive;font-size:1.1rem;letter-spacing:2px;color:var(--yellow);}
+.char-power{font-size:0.7rem;color:var(--muted);margin-top:0.2rem;}
+.settings-row{display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;justify-content:center;}
+.game-select{background:var(--card);border:2px solid var(--border);color:var(--text);padding:0.4rem 0.8rem;border-radius:6px;font-family:'Nunito',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;}
+
+/* ── FIGHT SCREEN ── */
+#screen-fight{flex-direction:column;position:relative;z-index:1;}
+.fight-header{background:var(--panel);border-bottom:2px solid var(--border);padding:0.7rem 1.2rem;display:flex;align-items:center;gap:0.75rem;}
+.round-badge{font-family:'Bangers',cursive;font-size:1rem;color:var(--yellow);letter-spacing:2px;white-space:nowrap;}
+.fighters-row{display:flex;align-items:flex-end;justify-content:space-between;gap:0.75rem;padding:0.8rem 1.2rem;background:linear-gradient(180deg,#0d0d18 0%,var(--dark) 100%);}
+.fighter-panel{flex:1;max-width:260px;}
+.fighter-panel.enemy{text-align:right;}
+.fighter-name{font-family:'Bangers',cursive;font-size:1rem;letter-spacing:2px;color:var(--yellow);margin-bottom:4px;}
+.hp-bar-wrap{height:14px;background:#111;border-radius:4px;border:1px solid #333;overflow:hidden;}
+.hp-bar{height:100%;border-radius:4px;transition:width 0.4s ease;}
+.hp-bar.player{background:linear-gradient(90deg,#00e676,#69f0ae);}
+.hp-bar.enemy-hp{background:linear-gradient(90deg,var(--red),#ff6b6b);}
+.hp-text{font-size:0.65rem;color:var(--muted);margin-top:2px;}
+.vs-display{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 0.75rem;}
+.avatar-big{font-size:3rem;line-height:1;}
+.combo-count{font-family:'Bangers',cursive;font-size:0.9rem;color:var(--yellow);letter-spacing:2px;min-height:1.1rem;}
+.arena{position:relative;height:80px;background:var(--panel);border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.hit-text{font-family:'Bangers',cursive;font-size:2.5rem;letter-spacing:4px;opacity:0;position:absolute;transform:scale(0.5) rotate(-5deg);text-shadow:3px 3px 0 #000;}
+.hit-text.show{animation:hitPop 0.6s forwards;}
+@keyframes hitPop{0%{opacity:0;transform:scale(0.3) rotate(-5deg);}30%{opacity:1;transform:scale(1.3) rotate(-5deg);}60%{opacity:1;transform:scale(1) rotate(-5deg);}100%{opacity:0;transform:scale(0.8) rotate(-5deg);}}
+.question-zone{flex:1;padding:1.2rem;display:flex;flex-direction:column;gap:0.9rem;max-width:800px;width:100%;margin:0 auto;}
+.question-topic{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--yellow);}
+.question-text{font-size:1.1rem;font-weight:700;line-height:1.5;color:var(--text);}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+.opt-btn{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:0.8rem 0.9rem;color:var(--text);font-family:'Nunito',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.15s;text-align:left;}
+.opt-btn:hover:not(:disabled){border-color:var(--yellow);background:#22221e;}
+.opt-btn.correct{border-color:#00e676;background:#0a2a0a;color:#00e676;}
+.opt-btn.wrong{border-color:var(--red);background:#2a0a0a;color:var(--red);}
+.opt-btn:disabled{cursor:default;}
+.next-btn{align-self:flex-end;font-family:'Bangers',cursive;font-size:1.2rem;letter-spacing:2px;background:var(--yellow);color:#000;border:none;padding:0.5rem 1.8rem;border-radius:8px;cursor:pointer;box-shadow:3px 3px 0 #000;display:none;}
+.next-btn.show{display:block;}
+.skip-btn{align-self:center;font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.5px;background:transparent;color:var(--muted);border:1px dashed var(--border);padding:0.35rem 0.9rem;border-radius:6px;cursor:pointer;transition:all 0.15s;margin-top:0.2rem;}
+.skip-btn:hover:not(:disabled){border-color:var(--red);color:var(--red);background:#1a0a0a;}
+.skip-btn:disabled{opacity:0.4;cursor:default;}
+.loading-zone{display:flex;align-items:center;gap:0.75rem;color:var(--muted);font-weight:700;}
+.spinner{width:18px;height:18px;border:3px solid var(--border);border-top-color:var(--yellow);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.score-bar{display:flex;gap:0.75rem;align-items:center;flex:1;justify-content:flex-end;}
+.score-chip{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.7rem;font-size:0.75rem;font-weight:700;color:var(--muted);}
+.score-chip span{color:var(--yellow);}
+.progress-dots{display:flex;gap:3px;flex-wrap:wrap;max-width:260px;}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--border);}
+.dot.right{background:#00e676;}
+.dot.wrong{background:var(--red);}
+.dot.current{background:var(--yellow);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* ── FIGHTER ARENA (Three.js) ── */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── RESULTS SCREEN ── */
+#screen-results{align-items:center;justify-content:flex-start;padding:1.5rem;gap:1.2rem;overflow-y:auto;z-index:1;}
+.result-title{font-family:'Bangers',cursive;font-size:clamp(2.2rem,7vw,4rem);letter-spacing:4px;text-align:center;}
+.result-title.win{color:var(--yellow);text-shadow:3px 3px 0 var(--red);}
+.result-title.lose{color:var(--red);text-shadow:3px 3px 0 #000;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.75rem;width:100%;max-width:700px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.9rem;text-align:center;}
+.stat-val{font-family:'Bangers',cursive;font-size:2.2rem;color:var(--yellow);letter-spacing:2px;}
+.stat-label{font-size:0.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+.analysis-section{width:100%;max-width:700px;}
+.analysis-title{font-family:'Bangers',cursive;font-size:1.3rem;letter-spacing:2px;color:var(--yellow);margin-bottom:0.6rem;}
+.analysis-content{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.1rem;font-size:0.9rem;line-height:1.7;white-space:pre-wrap;}
+.strength-tag{display:inline-block;background:#0a2a0a;border:1px solid #00e676;color:#00e676;border-radius:20px;padding:3px 11px;font-size:0.75rem;font-weight:700;margin:3px;}
+.gap-tag{display:inline-block;background:#2a0a0a;border:1px solid var(--red);color:var(--red);border-radius:20px;padding:3px 11px;font-size:0.75rem;font-weight:700;margin:3px;}
+.wrong-item{background:var(--card);border:1px solid #2a1a1a;border-left:3px solid var(--red);border-radius:8px;padding:0.9rem;margin-bottom:0.6rem;}
+.wrong-q{font-weight:700;margin-bottom:0.3rem;font-size:0.9rem;}
+.wrong-detail{font-size:0.8rem;color:var(--muted);line-height:1.5;}
+.wrong-detail .got{color:var(--red);}
+.wrong-detail .correct{color:#00e676;}
+.wrong-explanation{font-size:0.82rem;margin-top:0.3rem;line-height:1.6;color:#c0c0d0;}
+.btn-row{display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;}
+
+/* ── API KEY SCREEN ── */
+#screen-apikey{align-items:center;justify-content:center;z-index:1;padding:2rem;gap:1.5rem;text-align:center;}
+.apikey-card{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:2rem;max-width:520px;width:100%;text-align:left;}
+.apikey-title{font-family:'Bangers',cursive;font-size:2rem;letter-spacing:3px;color:var(--yellow);margin-bottom:0.25rem;}
+.apikey-step{display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:1rem;}
+.apikey-num{font-family:'Bangers',cursive;font-size:1.2rem;color:var(--yellow);background:#2a2a0a;border:1px solid var(--yellow);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.apikey-link{color:var(--yellow);font-size:0.85rem;word-break:break-all;}
+.apikey-input{width:100%;background:#0a0a12;border:2px solid var(--border);border-radius:8px;color:var(--text);font-family:'Nunito',sans-serif;font-size:0.9rem;font-weight:700;padding:0.7rem 1rem;margin-top:0.5rem;letter-spacing:1px;}
+.apikey-input:focus{outline:none;border-color:var(--yellow);}
+.apikey-input::placeholder{color:var(--border);letter-spacing:0;}
+.apikey-error{color:var(--red);font-size:0.82rem;font-weight:700;min-height:1.2rem;margin-top:0.25rem;}
+.apikey-saved{color:#00e676;font-size:0.82rem;font-weight:700;}
+
+/* ── INTRO SCREEN ── */
+#screen-intro{
+  align-items:center;justify-content:center;
+  position:fixed;inset:0;z-index:9999;
+  background:#000;overflow:hidden;
+  min-height:unset;
+}
+#introCanvas{position:absolute;inset:0;width:100%;height:100%;}
+.intro-content{
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
+  gap:0.5rem;pointer-events:none;
+  text-align:center;
+}
+.intro-logo{
+  font-family:'Bangers',cursive;
+  font-size:clamp(4rem,14vw,9rem);
+  letter-spacing:6px;
+  color:var(--yellow);
+  text-shadow:6px 6px 0 #000,-3px -3px 0 var(--red),0 0 60px #FFD60088;
+  line-height:0.9;
+  opacity:0;
+  transform:scale(0.3) rotate(-8deg);
+  transition:none;
+}
+.intro-logo.pop{
+  animation:logoPop 0.5s cubic-bezier(0.17,0.67,0.12,1.4) forwards;
+}
+@keyframes logoPop{
+  0%{opacity:0;transform:scale(0.2) rotate(-8deg);}
+  60%{opacity:1;transform:scale(1.15) rotate(2deg);}
+  80%{transform:scale(0.95) rotate(-1deg);}
+  100%{opacity:1;transform:scale(1) rotate(0deg);}
+}
+.intro-sub{
+  font-family:'Bangers',cursive;
+  font-size:clamp(1.2rem,4vw,2.2rem);
+  letter-spacing:8px;
+  color:var(--red);
+  text-shadow:2px 2px 0 #000;
+  opacity:0;
+  transform:translateY(20px);
+  transition:none;
+}
+.intro-sub.slide{animation:slideUp 0.4s ease-out 0.3s forwards;}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.intro-tagline{
+  font-family:'Bangers',cursive;
+  font-size:clamp(0.9rem,2.5vw,1.4rem);
+  letter-spacing:3px;
+  color:#aaa;
+  opacity:0;
+  transition:none;
+}
+.intro-tagline.fade{animation:fadeIn 0.5s ease 0.7s forwards;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+.intro-combo-burst{
+  position:absolute;z-index:11;
+  font-family:'Bangers',cursive;
+  letter-spacing:4px;
+  text-shadow:3px 3px 0 #000;
+  pointer-events:none;
+  opacity:0;
+}
+
+.intro-tap{
+  font-family:'Bangers',cursive;
+  font-size:clamp(1.2rem,3vw,1.8rem);
+  letter-spacing:4px;
+  color:var(--yellow);
+  cursor:pointer;
+  pointer-events:all;
+  opacity:0;
+  animation:tapPulse 1.2s ease-in-out infinite;
+  margin-top:1rem;
+  text-shadow:2px 2px 0 #000;
+  border:3px solid var(--yellow);
+  padding:0.6rem 2.5rem;
+  border-radius:8px;
+  background:rgba(255,214,0,0.1);
+  transition:background 0.2s;
+}
+.intro-tap:hover{background:rgba(255,214,0,0.25);}
+.intro-tap.show{opacity:1;}
+@keyframes tapPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 #FFD60044;}50%{transform:scale(1.04);box-shadow:0 0 20px 8px #FFD60022;}}
+
+.intro-start-overlay{
+  position:absolute;inset:0;z-index:20;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.55);
+  cursor:pointer;
+  transition:opacity 0.3s;
+}
+.intro-start-overlay.hide{opacity:0;pointer-events:none;}
+.intro-start-prompt{
+  font-family:'Bangers',cursive;
+  font-size:clamp(1.6rem,4vw,2.6rem);
+  letter-spacing:5px;
+  color:var(--yellow);
+  text-shadow:3px 3px 0 #000,0 0 40px #FFD600;
+  border:4px solid var(--yellow);
+  padding:1rem 3rem;
+  border-radius:12px;
+  background:rgba(0,0,0,0.8);
+  animation:tapPulse 1.4s ease-in-out infinite;
+  pointer-events:none;
+}
+
+.intro-hit-word{
+  position:absolute;
+  font-family:'Bangers',cursive;
+  font-size:clamp(2rem,8vw,5rem);
+  letter-spacing:5px;
+  pointer-events:none;
+  z-index:12;
+  animation:wordBurst 0.7s ease-out forwards;
+}
+@keyframes wordBurst{
+  0%{opacity:0;transform:scale(0.2) rotate(var(--rot,-5deg));}
+  35%{opacity:1;transform:scale(1.25) rotate(var(--rot,-5deg));}
+  65%{opacity:1;transform:scale(1) rotate(var(--rot,-5deg));}
+  100%{opacity:0;transform:scale(0.7) translateY(-30px) rotate(var(--rot,-5deg));}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ INLINE AUDIO ELEMENTS ══
+     Declaring audio elements directly in HTML is more reliable on file:// than
+     new Audio() — browser starts preloading on page load and the gesture
+     unlock is more consistent. -->
+<audio id="audio-bgIntro" src="music-intro.mp3" preload="auto" loop></audio>
+<audio id="audio-bgFight" src="music-fight.mp3" preload="auto" loop></audio>
+<audio id="audio-bgResults" src="music-results.mp3" preload="auto" loop></audio>
+
+<!-- ══ INTRO SCREEN ══ -->
+<div id="screen-intro" class="screen active">
+  <canvas id="introCanvas"></canvas>
+  <div class="intro-content" id="introContent">
+    <div class="intro-logo" id="introLogo">MATH<br>BRAWL</div>
+    <div class="intro-sub" id="introSub">⚡ INVINCIBLE EDITION ⚡</div>
+    <div class="intro-tagline" id="introTagline">BIRMINGHAM, MI · 5TH GRADE · MAP PREP</div>
+    <div class="intro-tap" id="introTap" onclick="exitIntro()">TAP TO FIGHT</div>
+  </div>
+  <div class="intro-start-overlay" id="introStart" onclick="beginIntro()">
+    <div class="intro-start-prompt">▶ TAP TO BEGIN</div>
+  </div>
+</div>
+
+<!-- ══ API KEY SETUP SCREEN ══ -->
+<div id="screen-apikey" class="screen">
+  <div style="font-family:'Bangers',cursive;font-size:3rem;letter-spacing:4px;color:var(--yellow);text-shadow:3px 3px 0 #000;">MATH BRAWL</div>
+  <div class="apikey-card">
+    <div class="apikey-title">⚡ First-Time Setup</div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.6;">This game uses AI to generate questions. You need a free Anthropic API key — takes about 2 minutes to get.</p>
+
+    <div class="apikey-step">
+      <div class="apikey-num">1</div>
+      <div>
+        <div style="font-weight:700;font-size:0.9rem;">Go to the Anthropic Console</div>
+        <a class="apikey-link" href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:3px;">Sign up free if you don't have an account. You get $5 credit — more than enough for this.</div>
+      </div>
+    </div>
+
+    <div class="apikey-step">
+      <div class="apikey-num">2</div>
+      <div>
+        <div style="font-weight:700;font-size:0.9rem;">Click "Create Key" and copy it</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:3px;">It starts with <code style="background:#111;padding:1px 6px;border-radius:4px;color:var(--yellow)">sk-ant-</code></div>
+      </div>
+    </div>
+
+    <div class="apikey-step">
+      <div class="apikey-num">3</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:0.9rem;">Paste it here</div>
+        <input class="apikey-input" id="apikeyInput" type="password" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false" />
+        <div id="apikeyError" class="apikey-error"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:0.25rem;padding:0.75rem;background:#0a1a0a;border:1px solid #1a3a1a;border-radius:8px;font-size:0.75rem;color:#5a8a5a;line-height:1.5;">
+      🔒 Your key is saved only in this browser on this computer. It never leaves your machine except to call the Anthropic API directly.
+    </div>
+
+    <button class="btn-secondary" onclick="testApiKey()" style="width:100%;margin-top:0.75rem;font-size:1rem;">🧪 Test Key First</button>
+    <button class="btn-main" onclick="saveApiKey()" style="width:100%;margin-top:0.5rem;font-size:1.3rem;">Save Key & Start Training →</button>
+  </div>
+</div>
+
+<!-- ══ TRAINING CAMP DASHBOARD ══ -->
+<div id="screen-camp" class="screen active">
+  <div class="camp-header">
+    <div>
+      <div class="camp-title">⚡ TRAINING CAMP</div>
+      <div class="camp-sub">Birmingham, MI → NWEA MAP 5th Grade</div>
+    </div>
+    <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+      <button class="btn-danger" onclick="confirmReset()">Reset All Data</button>
+      <button class="btn-secondary" onclick="showScreen('apikey')" style="font-size:0.85rem;padding:0.4rem 1rem;">🔑 API Key</button>
+      <button class="btn-main" onclick="showScreen('title')" style="font-size:1.2rem;padding:0.6rem 2rem;">▶ New Session</button>
+    </div>
+  </div>
+
+  <!-- Countdown -->
+  <div class="exam-countdown" id="examCountdown"></div>
+
+  <!-- 5-day calendar -->
+  <div>
+    <div class="camp-section-title" style="margin-bottom:0.6rem">📅 Training Schedule</div>
+    <div class="days-row" id="daysRow"></div>
+  </div>
+
+  <!-- Overall stats -->
+  <div>
+    <div class="camp-section-title" style="margin-bottom:0.6rem">🏆 Overall Stats</div>
+    <div class="overall-stats" id="overallStats"></div>
+  </div>
+
+  <!-- Topic mastery -->
+  <div>
+    <div class="camp-section-title" style="margin-bottom:0.6rem">📊 Topic Mastery</div>
+    <div class="topic-mastery" id="topicMastery"></div>
+  </div>
+
+  <!-- Session history -->
+  <div>
+    <div class="camp-section-title" style="margin-bottom:0.6rem">📜 Session History</div>
+    <div class="session-log" id="sessionLog"></div>
+  </div>
+</div>
+
+<!-- ══ TITLE / CHAR SELECT ══ -->
+<div id="screen-title" class="screen">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.3rem;padding:2rem;text-align:center;z-index:1;position:relative;">
+    <div class="title-logo">MATH BRAWL</div>
+    <div class="title-sub">⚡ Invincible Edition ⚡</div>
+    <p style="color:var(--muted);font-size:0.85rem;max-width:480px;">Choose your fighter. Every right answer hits the enemy. Every wrong answer hits you. Win by knowing your math.</p>
+    <p style="font-family:'Bangers',cursive;font-size:1rem;letter-spacing:3px;color:var(--yellow)">SELECT YOUR FIGHTER</p>
+    <div class="char-select-grid" id="charGrid"></div>
+    <div class="settings-row">
+      <span style="font-family:'Bangers',cursive;font-size:0.9rem;letter-spacing:2px;color:var(--muted)">DIFFICULTY:</span>
+      <select id="diffSelect" class="game-select">
+        <option value="adaptive">Adaptive (Recommended)</option>
+        <option value="beginner">Beginner</option>
+        <option value="standard">Standard</option>
+        <option value="hard">Hard</option>
+      </select>
+      <select id="questionsSelect" class="game-select">
+        <option value="10">10 questions</option>
+        <option value="20" selected>20 questions</option>
+        <option value="30">30 questions</option>
+        <option value="40">40 questions (Full Test)</option>
+      </select>
+    </div>
+    <label style="display:inline-flex;align-items:center;gap:0.5rem;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;color:var(--muted);cursor:pointer;user-select:none;">
+      <input type="checkbox" id="testModeToggle" style="width:18px;height:18px;cursor:pointer;accent-color:var(--yellow);">
+      <span>🧪 Test mode (no data saved)</span>
+    </label>
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
+      <button class="btn-secondary" onclick="showScreen('camp')">← Camp Dashboard</button>
+      <button class="btn-main" id="startBtn" disabled onclick="startFight()">FIGHT!</button>
+    </div>
+    <p style="font-size:0.72rem;color:var(--muted)">AI-generated questions — adaptive & unique every session</p>
+  </div>
+</div>
+
+<!-- ══ FIGHT SCREEN ══ -->
+<div id="screen-fight" class="screen">
+  <div class="fight-header">
+    <button onclick="confirmExitGame()" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:0.2rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:700;">✕ Exit</button>
+    <span id="testModeBadge" style="display:none;background:#5a1a5a;color:#ffaaff;border:1px solid #ff66ff;padding:0.15rem 0.55rem;border-radius:6px;font-family:'Bangers',cursive;letter-spacing:2px;font-size:0.75rem;">🧪 TEST MODE</span>
+    <div class="round-badge" id="roundBadge">Q 1 / 20</div>
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="score-bar">
+      <div class="score-chip">Streak: <span id="streakCount">0</span></div>
+      <div class="score-chip">Score: <span id="scoreCount">0</span></div>
+      <button id="muteBtn" onclick="toggleMute()" style="background:var(--card);border:1px solid var(--border);color:var(--muted);padding:0.2rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:700;">🔊 Sound On</button>
+    </div>
+  </div>
+  <div class="fighters-row">
+    <div class="fighter-panel player">
+      <div class="fighter-name" id="playerName">MARK</div>
+      <div class="hp-bar-wrap"><div class="hp-bar player" id="playerHpBar" style="width:100%"></div></div>
+      <div class="hp-text" id="playerHpText">100 / 100 HP</div>
+    </div>
+    <div class="combo-count" id="comboDisplay" style="font-family:'Bangers',cursive;font-size:1rem;color:var(--yellow);letter-spacing:2px;text-align:center;min-width:80px;"></div>
+    <div class="fighter-panel enemy" style="text-align:right;">
+      <div class="fighter-name" id="enemyName">OMNI-MAN</div>
+      <div class="hp-bar-wrap"><div class="hp-bar enemy-hp" id="enemyHpBar" style="width:100%"></div></div>
+      <div class="hp-text" id="enemyHpText">100 / 100 HP</div>
+    </div>
+  </div>
+
+  <!-- THREE.JS FIGHTER ARENA -->
+  <div id="arenaBox" style="position:relative;width:100%;height:220px;overflow:hidden;border-top:2px solid var(--border);border-bottom:2px solid var(--border);">
+    <canvas id="threeCanvas" style="width:100%;height:100%;display:block;"></canvas>
+    <!-- Overlay: hit text -->
+    <div id="hitText" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-family:'Bangers',cursive;font-size:3rem;letter-spacing:4px;text-shadow:3px 3px 0 #000;pointer-events:none;z-index:10;white-space:nowrap;"></div>
+    <!-- Combo counter -->
+    <div id="comboDisplay" style="position:absolute;top:10px;left:50%;transform:translateX(-50%);font-family:'Bangers',cursive;letter-spacing:3px;pointer-events:none;z-index:10;text-align:center;transition:all 0.1s;"></div>
+    <!-- Particle canvas overlay -->
+    <canvas id="particleCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:9;"></canvas>
+    <!-- PERFECT overlay -->
+    <div id="perfectOverlay" style="display:none;position:fixed;inset:0;z-index:999;pointer-events:none;align-items:center;justify-content:center;flex-direction:column;">
+      <div id="perfectText" style="font-family:'Bangers',cursive;font-size:clamp(4rem,12vw,8rem);letter-spacing:8px;color:#FFD600;text-shadow:0 0 40px #FFD600,4px 4px 0 #000;text-align:center;"></div>
+      <div id="perfectSub" style="font-family:'Bangers',cursive;font-size:clamp(1.5rem,4vw,2.5rem);letter-spacing:4px;color:#fff;text-shadow:2px 2px 0 #000;margin-top:0.5rem;"></div>
+    </div>
+  </div>
+  <div class="question-zone" id="questionZone">
+    <div class="loading-zone"><div class="spinner"></div> Loading next question…</div>
+  </div>
+  <!-- Version tag -->
+  <div style="position:fixed;bottom:4px;right:8px;font-size:0.6rem;color:#444;font-family:monospace;z-index:999;pointer-events:none;">v2.5.0</div>
+</div>
+
+<!-- ══ RESULTS SCREEN ══ -->
+<div id="screen-results" class="screen">
+  <div class="result-title" id="resultTitle">VICTORY!</div>
+  <div style="font-size:0.9rem;color:var(--muted);font-family:'Bangers',cursive;letter-spacing:3px" id="resultSub">Math Champion</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val" id="statCorrect">0</div><div class="stat-label">Correct</div></div>
+    <div class="stat-card"><div class="stat-val" id="statPct">0%</div><div class="stat-label">Accuracy</div></div>
+    <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-label">Best Streak</div></div>
+    <div class="stat-card"><div class="stat-val" id="statScore">0</div><div class="stat-label">Score</div></div>
+  </div>
+  <div class="analysis-section">
+    <div class="analysis-title">📊 This Session</div>
+    <div class="topic-mastery" id="sessionTopics"></div>
+  </div>
+  <div class="analysis-section" id="strengthGapSection"></div>
+  <div class="analysis-section" id="wrongReviewSection">
+    <div class="analysis-title">❌ Missed Questions</div>
+    <div id="wrongList"></div>
+  </div>
+  <div class="analysis-section">
+    <div class="analysis-title">🤖 Coach Feedback</div>
+    <div id="coachAnalysis" class="loading-zone"><div class="spinner"></div> Generating feedback…</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-secondary" onclick="showScreen('camp')">← Camp Dashboard</button>
+    <button class="btn-main" onclick="playAgain(false)">REMATCH!</button>
+    <button class="btn-secondary" onclick="playAgain(true)">New Fighter</button>
+  </div>
+</div>
+
+<script>
+// ══ STORAGE — uses localStorage since this runs locally ══
+const STORE_KEY = 'mathbrawl_v2';
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    sessions: [],          // array of session records
+    topicPerf: {},         // cumulative topic perf across all sessions
+    totalCorrect: 0,
+    totalAnswered: 0,
+    totalScore: 0,
+    bestStreak: 0,
+    lastPlayed: null,
+  };
+}
+
+function saveStore(data) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function confirmReset() {
+  if (confirm('Reset ALL training data? This cannot be undone.')) {
+    localStorage.removeItem(STORE_KEY);
+    buildCampDashboard();
+  }
+}
+
+// ══ CONSTANTS ══
+const CHARACTERS = [
+  {id:'mark',name:'Mark Grayson',alias:'INVINCIBLE',emoji:'🦸',color:'#1565C0',power:'Viltrumite strength'},
+  {id:'atom',name:'Atom Eve',alias:'ATOM EVE',emoji:'⚡',color:'#c2185b',power:'Matter manipulation'},
+  {id:'rex',name:'Rex Splode',alias:'REX SPLODE',emoji:'💥',color:'#E53935',power:'Kinetic energy'},
+  {id:'robot',name:'Robot',alias:'ROBOT',emoji:'🤖',color:'#37474f',power:'Tactical genius'},
+  {id:'william',name:'William',alias:'TECH WHIZ',emoji:'🧠',color:'#6a1b9a',power:'Street smarts'},
+];
+const ENEMIES = [
+  {name:'OMNI-MAN',emoji:'😤'},{name:'VILTRUMITE',emoji:'👹'},
+  {name:'BATTLE BEAST',emoji:'🦁'},{name:'SEQUID',emoji:'🐙'},{name:'CONQUEST',emoji:'💀'},
+];
+const TOPICS = [
+  'Factors & Multiples',
+  'Partial Products Multiplication',
+  'Partial Quotients Division',
+  'Fractions — Equivalent & Comparing',
+  'Fractions — Adding & Subtracting',
+  'Mixed Numbers & Improper Fractions',
+  'Decimals & Place Value',
+  'Geometry — Perimeter & Area',
+  'Geometry — Angles & Lines',
+  'Geometry — Shapes & Solids',
+  'Measurement & Units',
+  'Data & Graphs',
+  'Estimation & Rounding',
+  'Multi-Step Word Problems',
+];
+
+// Topic weights: higher = more likely to appear (packet-critical topics weighted up)
+const TOPIC_WEIGHTS = {
+  'Factors & Multiples': 3,
+  'Partial Products Multiplication': 4,
+  'Partial Quotients Division': 4,
+  'Fractions — Equivalent & Comparing': 4,
+  'Fractions — Adding & Subtracting': 4,
+  'Mixed Numbers & Improper Fractions': 3,
+  'Decimals & Place Value': 3,
+  'Geometry — Perimeter & Area': 3,
+  'Geometry — Angles & Lines': 2,
+  'Geometry — Shapes & Solids': 2,
+  'Measurement & Units': 2,
+  'Data & Graphs': 2,
+  'Estimation & Rounding': 2,
+  'Multi-Step Word Problems': 3,
+};
+
+// Packet-specific examples and methods per topic (feeds the AI prompt)
+const TOPIC_CONTEXT = {
+  'Factors & Multiples': `Focus on: identifying all factors of a number (e.g. factors of 24 = 1,2,3,4,6,8,12,24), identifying multiples of a number, distinguishing factors from multiples, prime numbers, sets of multiples (e.g. which set are ALL multiples of 7?). Common mistakes: confusing factors with multiples, forgetting 1 and the number itself as factors.`,
+
+  'Partial Products Multiplication': `Use the PARTIAL PRODUCTS METHOD specifically — breaking numbers by place value. Example: 57 x 4 = (50x4) + (7x4) = 200+28 = 228. Also: 2,749 x 68, 156 x 78, 837 x 46, 368 x 20. Test the distributive property: which expression equals 3x49? Answer: 3x(40+9). Ask students to identify which partial products expression matches a multiplication problem. Common mistakes: wrong decomposition, adding partial products incorrectly.`,
+
+  'Partial Quotients Division': `Use the PARTIAL QUOTIENTS METHOD specifically. Examples from packet: 1,486÷3, 2,520÷10, 4,836÷6, 3,215÷5, 769÷4, 765÷5, 1,524÷6, 875÷5, 4,235÷10. Also: if 600÷A=300 what is A? Fill in blank: 12x___=60. Check work by multiplying back. Common mistakes: wrong remainder, off-by-one errors in quotient.`,
+
+  'Fractions — Equivalent & Comparing': `Identifying equivalent fractions, converting between forms, which is greater/less, ordering fractions on a number line, which number line shows 5/2 and 2¼, locating fractions between whole numbers. Common mistakes: comparing numerators only, wrong placement on number line.`,
+
+  'Fractions — Adding & Subtracting': `Adding and subtracting fractions with like and unlike denominators. Examples: 3/4+2/4, 3/4-2/4, 8/12-1/4, 8/12+1/4, 1/2+3/8, 1/6+5/12, 3/10-23/100, 8/10-3/5. Word problems: Amy walks 7/8 mile, Tom walks 4/8 mile, how much farther? Sonya needs 1/2 + 1/4 tsp salt total. Common mistakes: adding denominators, not finding common denominator.`,
+
+  'Mixed Numbers & Improper Fractions': `Converting between mixed numbers and improper fractions (e.g. 13/3 = 4⅓), identifying shaded portions as both forms, ordering mixed numbers and fractions (11/3, 1/6, 1⅔ from least to greatest), locating on number line (2 7/12 vs 11/4). Common mistakes: wrong conversion formula, mis-ordering.`,
+
+  'Decimals & Place Value': `Reading and writing decimals (tenths, hundredths), converting fractions to decimals (4/10=0.4, 23/100=0.23), matching word form to decimal (twelve and forty-nine hundredths = $12.49), money as decimals (5 one-dollar bills + 6 quarters + 2 dimes + 1 penny), which number is same as 0.5 (one half), eighteen hundredths in standard form. Common mistakes: confusing tenths and hundredths place.`,
+
+  'Geometry — Perimeter & Area': `Finding perimeter of irregular shapes (e.g. L-shaped figure with sides 6,4,4,2,2 ft), finding area of rectangles, finding missing side given perimeter (rectangle perimeter=36ft length=10ft find width), finding missing side given area (area=60 sq ft length=6ft find width), area from grid (count shaded squares). Common mistakes: adding only some sides, confusing perimeter and area formulas.`,
+
+  'Geometry — Angles & Lines': `Identifying acute/right/obtuse angles, parallel vs perpendicular vs intersecting lines, which angle in a figure is a right angle, identifying which lines are parallel or perpendicular to line A in a diagram. Common mistakes: confusing acute and obtuse, parallel vs perpendicular.`,
+
+  'Geometry — Shapes & Solids': `Identifying triangle types (equilateral=3 equal sides, isosceles=2 equal sides, right triangle=90 degree angle), identifying 3D shapes (rectangular prism/box: 8 vertices, 6 faces, 12 edges), naming geometric figures. Common mistakes: confusing isosceles and equilateral, wrong count of faces/edges/vertices.`,
+
+  'Measurement & Units': `Measuring length to nearest inch or centimeter from a ruler image, choosing appropriate unit (30cm for telephone book length), converting time units (20 minutes to seconds = 1200 seconds), reading a thermometer to nearest degree, choosing best precision for a measurement (3.55cm — nearest millimeter is most useful). Common mistakes: misreading ruler, wrong unit conversion.`,
+
+  'Data & Graphs': `Reading bar graphs and double bar graphs, finding totals from graphs (how many total minutes did 3rd graders read in July across 4 weeks?), comparing groups (how many more girls born June-Aug than boys?), finding differences between groups on a bar graph (how many more boys like baseball than girls?). Common mistakes: misreading scale, adding when should subtract.`,
+
+  'Estimation & Rounding': `Estimating sums (811+356 ≈ 1200), estimating products (81x82 ≈ 6400), reasonable approximations for real-world problems (100 4th graders need hot dogs — which is NOT reasonable?), estimating how many hours a cat sleeps in a month (17 hrs/day x 30 days ≈ 510, so about 600). Common mistakes: rounding wrong place value, unreasonable estimates.`,
+
+  'Multi-Step Word Problems': `Problems requiring 2+ operations: 27 students each collect 150 cans = how many total? 33 photos / 3 per page = how many pages? Al needs quarters for 10-cent copies, copy machine gives no change — minimum copies without losing money? Laura writes 200 words/page, how many pages for 1000 words? Sharon has 12 marbles gives away 8 — what fraction left? Common mistakes: wrong operation choice, stopping after first step.`,
+};
+
+// Exam date: Monday
+const EXAM_DATE = new Date('2026-06-01T08:00:00');
+// Training window: Wed May 27 – Sun May 31
+const TRAINING_DAYS = [
+  {label:'WED',date:'2026-05-27',shortDate:'May 27'},
+  {label:'THU',date:'2026-05-28',shortDate:'May 28'},
+  {label:'FRI',date:'2026-05-29',shortDate:'May 29'},
+  {label:'SAT',date:'2026-05-30',shortDate:'May 30'},
+  {label:'SUN',date:'2026-05-31',shortDate:'May 31'},
+];
+
+let selectedChar = null;
+let gameState = {};
+
+// ══ CAMP DASHBOARD ══
+function buildCampDashboard() {
+  const store = loadStore();
+  const now = new Date();
+
+  // Countdown
+  const msLeft = EXAM_DATE - now;
+  const daysLeft = Math.max(0, Math.ceil(msLeft / 86400000));
+  const hoursLeft = Math.max(0, Math.ceil(msLeft / 3600000));
+  const readiness = Math.min(100, Math.round(
+    store.totalAnswered > 0 ? (store.totalCorrect / store.totalAnswered) * 100 : 0
+  ));
+  const readColor = readiness >= 75 ? '#00e676' : readiness >= 55 ? '#FFD600' : '#E53935';
+  document.getElementById('examCountdown').innerHTML = `
+    <div>
+      <div class="exam-days">${daysLeft} DAYS</div>
+      <div class="exam-info">Until NWEA MAP Exam — Monday June 1</div>
+    </div>
+    <div class="readiness-bar-wrap">
+      <div class="readiness-label">Readiness Score</div>
+      <div class="readiness-bar"><div class="readiness-fill" style="width:${readiness}%;background:${readColor}"></div></div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:3px">${readiness}% — based on overall accuracy</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:'Bangers',cursive;font-size:1.8rem;color:${readColor}">${readiness}%</div>
+      <div style="font-size:0.72rem;color:var(--muted)">Overall Accuracy</div>
+    </div>
+  `;
+
+  // Days row
+  const todayStr = now.toISOString().slice(0,10);
+  const daysHtml = TRAINING_DAYS.map(day => {
+    const daySessions = store.sessions.filter(s => s.date === day.date);
+    const dayCorrect = daySessions.reduce((a,s) => a + s.correct, 0);
+    const dayTotal = daySessions.reduce((a,s) => a + s.total, 0);
+    const dayAcc = dayTotal > 0 ? Math.round(dayCorrect/dayTotal*100) : null;
+    const isToday = day.date === todayStr;
+    const isDone = daySessions.length > 0;
+    const isFuture = day.date > todayStr;
+    let cls = 'day-card';
+    if (isToday) cls += ' today';
+    else if (isDone) cls += ' done';
+    else if (isFuture) cls += ' future';
+    const accColor = dayAcc >= 75 ? '#00e676' : dayAcc >= 55 ? '#FFD600' : '#E53935';
+    return `<div class="${cls}">
+      ${isToday ? '<div class="day-badge">TODAY</div>' : ''}
+      <div class="day-label">${day.label}</div>
+      <div class="day-date">${day.shortDate}</div>
+      <div class="day-sessions" style="color:${isDone ? 'var(--yellow)' : 'var(--border)'}">${daySessions.length}</div>
+      <div style="font-size:0.65rem;color:var(--muted)">session${daySessions.length !== 1 ? 's' : ''}</div>
+      ${dayAcc !== null ? `<div class="day-acc" style="color:${accColor};font-weight:900;margin-top:3px">${dayAcc}%</div>` : ''}
+    </div>`;
+  }).join('');
+  document.getElementById('daysRow').innerHTML = daysHtml;
+
+  // Overall stats
+  const totalSessions = store.sessions.length;
+  const bestSession = store.sessions.reduce((best, s) => {
+    const acc = s.total > 0 ? s.correct/s.total : 0;
+    const bAcc = best ? (best.total > 0 ? best.correct/best.total : 0) : -1;
+    return acc > bAcc ? s : best;
+  }, null);
+  document.getElementById('overallStats').innerHTML = `
+    <div class="stat-mini"><div class="stat-mini-val">${totalSessions}</div><div class="stat-mini-lbl">Sessions</div></div>
+    <div class="stat-mini"><div class="stat-mini-val">${store.totalAnswered}</div><div class="stat-mini-lbl">Questions</div></div>
+    <div class="stat-mini"><div class="stat-mini-val">${readiness}%</div><div class="stat-mini-lbl">Accuracy</div></div>
+    <div class="stat-mini"><div class="stat-mini-val">${store.bestStreak}</div><div class="stat-mini-lbl">Best Streak</div></div>
+    <div class="stat-mini"><div class="stat-mini-val">${store.totalScore.toLocaleString()}</div><div class="stat-mini-lbl">Total Score</div></div>
+    <div class="stat-mini"><div class="stat-mini-val">${bestSession ? Math.round(bestSession.correct/bestSession.total*100) + '%' : '--'}</div><div class="stat-mini-lbl">Best Session</div></div>
+  `;
+
+  // Topic mastery
+  const topicHtml = TOPICS.map(t => {
+    const p = store.topicPerf[t];
+    if (!p || p.total === 0) {
+      return `<div class="pillar-row">
+        <div class="pillar-label">${t}</div>
+        <div class="pillar-track"><div class="pillar-fill" style="width:0%;background:var(--border)"></div></div>
+        <div class="pillar-pct" style="color:var(--muted)">--</div>
+        <div class="pillar-count" style="font-size:0.65rem;color:var(--border)">no data</div>
+      </div>`;
+    }
+    const pct = Math.round(p.correct/p.total*100);
+    const col = pct >= 80 ? '#00e676' : pct >= 60 ? '#FFD600' : '#E53935';
+    return `<div class="pillar-row">
+      <div class="pillar-label">${t}</div>
+      <div class="pillar-track"><div class="pillar-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="pillar-pct">${pct}%</div>
+      <div class="pillar-count" style="font-size:0.65rem;color:var(--muted)">${p.correct}/${p.total}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('topicMastery').innerHTML = topicHtml;
+
+  // Session log (newest first)
+  const logHtml = [...store.sessions].reverse().slice(0, 20).map(s => {
+    const acc = s.total > 0 ? Math.round(s.correct/s.total*100) : 0;
+    const accColor = acc >= 75 ? '#00e676' : acc >= 55 ? '#FFD600' : '#E53935';
+    const won = s.won;
+    return `<div class="session-row">
+      <div class="sr-char">${s.charEmoji || '🦸'}</div>
+      <div class="sr-info">
+        <span style="color:var(--text);font-weight:700">${s.charAlias || 'Fighter'}</span>
+        vs ${s.enemyName} &nbsp;·&nbsp; ${s.date} &nbsp;·&nbsp; ${s.diff} &nbsp;·&nbsp; ${s.total}Q
+      </div>
+      <div class="sr-score">${s.score.toLocaleString()}</div>
+      <div class="sr-pct" style="color:${accColor}">${acc}%</div>
+      <div style="font-size:0.8rem">${won ? '🏆' : '💀'}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:0.85rem;padding:0.5rem">No sessions yet. Hit New Session to start training!</div>';
+  document.getElementById('sessionLog').innerHTML = logHtml;
+}
+
+// ══ CHAR SELECT ══
+function buildCharGrid() {
+  document.getElementById('charGrid').innerHTML = CHARACTERS.map(c => `
+    <div class="char-card" data-id="${c.id}" style="--char-color:${c.color}" onclick="selectChar('${c.id}')">
+      <div class="char-avatar">${c.emoji}</div>
+      <div class="char-name">${c.alias}</div>
+      <div class="char-power">${c.power}</div>
+      <div class="char-tap" style="font-size:0.65rem;color:var(--muted);margin-top:0.3rem;">tap to select</div>
+    </div>
+  `).join('');
+}
+
+function selectChar(id) {
+  try {
+    selectedChar = CHARACTERS.find(c => c.id === id);
+    document.querySelectorAll('.char-card').forEach(el => {
+      const isSelected = el.dataset.id === id;
+      el.classList.toggle('selected', isSelected);
+      const hint = el.querySelector('.char-tap');
+      if (hint) hint.textContent = isSelected ? '✓ selected' : 'tap to select';
+    });
+    const btn = document.getElementById('startBtn');
+    btn.disabled = false;
+    btn.textContent = '⚔ FIGHT!';
+    sfxSelect();
+  } catch(e) { console.error('selectChar error:', e); }
+}
+
+function startFight() {
+  try {
+    if (!selectedChar) { alert('Pick a fighter first!'); return; }
+    const totalQ = parseInt(document.getElementById('questionsSelect').value) || 20;
+    const diff = document.getElementById('diffSelect').value || 'adaptive';
+    const testMode = !!document.getElementById('testModeToggle')?.checked;
+    const enemy = ENEMIES[Math.floor(Math.random() * ENEMIES.length)];
+
+    gameState = {
+      char: selectedChar, enemy, totalQ, diff, testMode,
+      currentQ: 0, playerHp: 100, enemyHp: 100,
+      score: 0, streak: 0, bestStreak: 0, correct: 0,
+      history: [], topicPerf: {},
+      diffLevel: diff === 'beginner' ? 1 : diff === 'hard' ? 3 : 2,
+    };
+
+    document.getElementById('playerName').textContent = selectedChar.alias;
+    document.getElementById('enemyName').textContent = enemy.name;
+    const testBadge = document.getElementById('testModeBadge');
+    if (testBadge) testBadge.style.display = testMode ? 'inline-block' : 'none';
+    updateHpBars();
+    buildProgressDots();
+    showScreen('fight');
+    playBgMusic('bgFight', 0.35);
+    setTimeout(() => initThree(), 60);
+    loadAnnouncerVoice();
+    sfxFightStart();
+    loadNextQuestion();
+  } catch(e) {
+    console.error('startFight error:', e);
+    alert('Error starting fight: ' + e.message);
+  }
+}
+
+function buildProgressDots() {
+  document.getElementById('progressDots').innerHTML =
+    Array.from({length: gameState.totalQ}, (_,i) =>
+      `<div class="dot${i===0?' current':''}" id="dot${i}"></div>`
+    ).join('');
+}
+
+function markDot(i, wasCorrect) {
+  const d = document.getElementById(`dot${i}`);
+  if (!d) return;
+  d.classList.remove('current');
+  d.classList.add(wasCorrect ? 'right' : 'wrong');
+  const n = document.getElementById(`dot${i+1}`);
+  if (n) n.classList.add('current');
+}
+
+function updateHpBars() {
+  const gs = gameState;
+  document.getElementById('playerHpBar').style.width = gs.playerHp + '%';
+  document.getElementById('enemyHpBar').style.width = gs.enemyHp + '%';
+  document.getElementById('playerHpText').textContent = `${Math.max(0,gs.playerHp)} / 100 HP`;
+  document.getElementById('enemyHpText').textContent = `${Math.max(0,gs.enemyHp)} / 100 HP`;
+  document.getElementById('streakCount').textContent = gs.streak;
+  document.getElementById('scoreCount').textContent = gs.score;
+  document.getElementById('roundBadge').textContent = `Q ${gs.currentQ+1} / ${gs.totalQ}`;
+}
+
+// ══ ADAPTIVE TOPIC + LEVEL SELECTION ══
+function chooseTopic() {
+  const gs = gameState;
+  const store = loadStore();
+
+  // Build weighted list — base weight from TOPIC_WEIGHTS, boosted by weak performance
+  const weights = TOPICS.map(t => {
+    let w = TOPIC_WEIGHTS[t] || 2;
+    // Boost if weak in this session
+    const sess = gs.topicPerf[t];
+    if (sess && sess.total >= 2) {
+      const r = sess.correct / sess.total;
+      if (r < 0.5) w += 4;
+      else if (r < 0.75) w += 2;
+    }
+    // Boost if weak historically (but less than session)
+    const cum = store.topicPerf[t];
+    if (cum && cum.total >= 3) {
+      const r = cum.correct / cum.total;
+      if (r < 0.5) w += 2;
+      else if (r < 0.75) w += 1;
+    }
+    // Boost unexplored topics slightly
+    if ((!sess || sess.total === 0) && (!cum || cum.total === 0)) w += 1;
+    return w;
+  });
+
+  const total = weights.reduce((a,b) => a+b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return TOPICS[i];
+  }
+  return TOPICS[0];
+}
+
+function getLevel() {
+  const gs = gameState;
+  if (gs.diff !== 'adaptive') return gs.diffLevel;
+  const recent = gs.history.slice(-5);
+  if (recent.length < 3) return 2;
+  const rc = recent.filter(h => h.wasCorrect).length;
+  if (rc >= 4) return Math.min(3, gs.diffLevel + 1);
+  if (rc <= 1) return Math.max(1, gs.diffLevel - 1);
+  return gs.diffLevel;
+}
+
+// ══ QUESTION LOADING ══
+async function loadNextQuestion() {
+  const gs = gameState;
+  if (gs.currentQ >= gs.totalQ) { endGame(); return; }
+  const qz = document.getElementById('questionZone');
+  qz.innerHTML = `<div class="loading-zone"><div class="spinner"></div> Generating question…</div>`;
+
+  const topic = chooseTopic();
+  const level = getLevel();
+
+  // Collect ALL questions seen this session + last 20 from store to avoid repeats
+  const store = loadStore();
+  const sessionQs = gs.history.map(h => h.question);
+  const storeQs = store.sessions
+    .slice(-3)
+    .flatMap(s => s.questionLog || [])
+    .slice(-20);
+  const allSeen = [...new Set([...sessionQs, ...storeQs])];
+  const avoidQ = allSeen.length > 0
+    ? 'Do NOT use questions similar to any of these:\n' + allSeen.map((q,i) => `${i+1}. ${q}`).join('\n')
+    : 'No previous questions to avoid yet.';
+  const levelDesc = level===1?'straightforward single-step':level===2?'grade-level, may have 2 steps':'challenging multi-step or tricky wording';
+  const ctx = TOPIC_CONTEXT[topic] || '';
+
+  // 70% packet-style, 30% MAP-style broader reasoning
+  const style = Math.random() < 0.7 ? 'packet' : 'map';
+  const styleNote = style === 'packet'
+    ? 'Model this question closely after Birmingham Public Schools 4th→5th grade progression test style. Use the specific methods and number types described above.'
+    : 'Model this as an NWEA MAP-style question: real-world context, requires selecting the right operation or reasoning about the concept, not just computing.';
+
+  const prompt = `You are generating a math question for a 4th-grade student in Birmingham, MI preparing for the 5th-grade math progression test that determines advanced math placement.
+
+TOPIC: ${topic}
+DIFFICULTY: ${levelDesc} (level ${level}/3)
+STYLE NOTE: ${styleNote}
+
+TOPIC GUIDANCE (use these specific methods, number types, and common mistakes):
+${ctx}
+
+${avoidQ}
+
+Also vary the question format — don't always ask "which number..." or "what is...". Mix in word problems, fill-in-the-blank setups, "which expression equals...", "solve:", etc.
+
+Return ONLY valid JSON with no markdown, no extra text, nothing before or after the JSON:
+{"question":"...","options":["A) ...","B) ...","C) ...","D) ..."],"answer":"A) ...","explanation":"2 sentences: first explain why the answer is correct, then name the specific mistake a student would make choosing the wrong answer","visual":null}
+
+If the question references a bar graph, number line, or grid, populate the visual field instead of null:
+
+For a bar graph: {"type":"bargraph","title":"...","labels":["Anna","Ben","Clara"],"values":[45,30,60],"unit":"minutes"}
+For a number line: {"type":"numberline","min":0,"max":2,"markers":[{"label":"X","value":1.75}],"ticks":8}
+For a shape/grid: {"type":"grid","cols":7,"rows":5,"shaded":11} (for area estimation questions)
+
+IMPORTANT: If your question text says "the bar graph below" or "the number line below" or "the grid below", you MUST include the matching visual data. Never reference a visual without providing its data.
+
+RULES:
+- question must be clear and complete, 1-3 sentences max
+- all 4 options must look plausible — wrong answers should be results of common mistakes
+- answer field must be an EXACT copy of one of the options strings
+- for computation questions show the work setup in the question if it helps
+- keep language appropriate for a 10-year-old`;
+
+  try {
+    const raw = await callClaude(prompt, 700);
+    let q;
+    try { q = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e) {
+      qz.innerHTML = `<div class="loading-zone" style="color:var(--red)">⚠ Parse error, retrying…</div>`;
+      await new Promise(r => setTimeout(r,600));
+      loadNextQuestion(); return;
+    }
+    displayQuestion(q, topic);
+  } catch(err) {
+    qz.innerHTML = `<div class="loading-zone" style="color:var(--red);flex-direction:column;gap:0.5rem"><div>⚠ Error: ${err.message}</div><div style="font-size:0.75rem;color:var(--muted)">Check console (F12) for details</div><button onclick="loadNextQuestion()" style="margin-top:8px;background:var(--yellow);color:#000;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-weight:700">Retry</button></div>`;
+  }
+}
+
+async function callClaude(userPrompt, maxTok) {
+  const key = getApiKey();
+  if (!key) { showScreen('apikey'); throw new Error('No API key'); }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body: JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens: maxTok,
+      messages:[{role:'user',content:userPrompt}]
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(()=>'');
+    console.error('API error', res.status, errText);
+    if (res.status === 401) {
+      showScreen('apikey');
+      document.getElementById('apikeyError').textContent = 'Invalid API key — please check and try again.';
+    }
+    throw new Error('API '+res.status);
+  }
+  const data = await res.json();
+  return data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+
+function displayQuestion(q, topic) {
+  gameState._currentQ = q;
+  gameState._currentTopic = topic;
+  sfxNewQuestion();
+  const qz = document.getElementById('questionZone');
+  const visualHtml = q.visual ? renderVisual(q.visual) : '';
+  const skipBtn = q.visual
+    ? `<button class="skip-btn" id="skipBtn" onclick="skipQuestion()">🚫 Image didn't load — Skip question</button>`
+    : '';
+  qz.innerHTML = `
+    <div class="question-topic">${topic}</div>
+    <div class="question-text">${q.question}</div>
+    ${visualHtml}
+    <div class="options-grid" id="optionsGrid">
+      ${q.options.map((opt,i) => `<button class="opt-btn" id="opt${i}" onclick="submitAnswer(${i})">${opt}</button>`).join('')}
+    </div>
+    ${skipBtn}
+    <button class="next-btn" id="nextBtn" onclick="afterQuestion()">Next Question →</button>
+  `;
+  gameState._options = q.options;
+}
+
+function skipQuestion() {
+  const btn = document.getElementById('skipBtn');
+  if (btn) btn.disabled = true;
+  loadNextQuestion();
+}
+
+function renderVisual(v) {
+  if (!v || !v.type) return '';
+  try {
+    if (v.type === 'bargraph') return renderBarGraph(v);
+    if (v.type === 'numberline') return renderNumberLine(v);
+    if (v.type === 'grid') return renderGrid(v);
+  } catch(e) { console.warn('Visual render error:', e); }
+  return '';
+}
+
+function renderBarGraph(v) {
+  const labels = v.labels || [];
+  const values = v.values || [];
+  const unit = v.unit || '';
+  const title = v.title || '';
+  const max = Math.max(...values, 10);
+  const roundedMax = Math.ceil(max / 10) * 10;
+  const W = 340, H = 180, padL = 40, padB = 36, padT = 28, padR = 12;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const barW = Math.min(36, (chartW / labels.length) * 0.6);
+  const gap = chartW / labels.length;
+  const colors = ['#1565C0','#E53935','#2E7D32','#F57F17','#6A1B9A','#00838F'];
+
+  // Y axis ticks
+  const yTicks = 5;
+  let yLines = '';
+  let yLabels = '';
+  for (let i = 0; i <= yTicks; i++) {
+    const val = Math.round((roundedMax / yTicks) * i);
+    const y = padT + chartH - (val / roundedMax) * chartH;
+    yLines += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#2e2e4e" stroke-width="0.5"/>`;
+    yLabels += `<text x="${padL - 4}" y="${y + 4}" text-anchor="end" font-size="9" fill="#888aaa">${val}</text>`;
+  }
+
+  // Bars
+  let bars = '';
+  labels.forEach((lbl, i) => {
+    const x = padL + gap * i + gap / 2 - barW / 2;
+    const barH = (values[i] / roundedMax) * chartH;
+    const y = padT + chartH - barH;
+    const col = colors[i % colors.length];
+    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${col}" rx="2"/>`;
+    bars += `<text x="${x + barW/2}" y="${y - 3}" text-anchor="middle" font-size="9" fill="#f0f0ff" font-weight="700">${values[i]}</text>`;
+    bars += `<text x="${padL + gap * i + gap/2}" y="${H - padB + 14}" text-anchor="middle" font-size="9" fill="#888aaa">${lbl}</text>`;
+  });
+
+  // Unit label on y axis
+  const unitLabel = unit ? `<text x="8" y="${padT + chartH/2}" text-anchor="middle" font-size="9" fill="#888aaa" transform="rotate(-90,8,${padT + chartH/2})">${unit}</text>` : '';
+
+  return `<div style="margin:0.5rem 0;background:#0d0d18;border:1px solid #2e2e4e;border-radius:10px;padding:0.5rem;overflow:hidden;">
+    <div style="font-size:0.72rem;font-weight:700;color:#888aaa;text-align:center;margin-bottom:4px;">${title}</div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block;margin:0 auto;">
+      ${yLines}${yLabels}${unitLabel}${bars}
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="#888aaa" stroke-width="1"/>
+      <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="#888aaa" stroke-width="1"/>
+    </svg>
+  </div>`;
+}
+
+function renderNumberLine(v) {
+  const min = v.min ?? 0;
+  const max = v.max ?? 3;
+  const ticks = v.ticks ?? 8;
+  const markers = v.markers || [];
+  const W = 340, H = 60, padX = 24;
+  const lineY = 35;
+  const span = max - min;
+
+  // Tick marks
+  let ticksHtml = '';
+  for (let i = 0; i <= ticks; i++) {
+    const val = min + (span / ticks) * i;
+    const x = padX + (val - min) / span * (W - 2*padX);
+    const isWhole = Math.abs(val - Math.round(val)) < 0.01;
+    ticksHtml += `<line x1="${x}" y1="${lineY - (isWhole?12:7)}" x2="${x}" y2="${lineY}" stroke="#888aaa" stroke-width="${isWhole?1.5:0.8}"/>`;
+    if (isWhole) ticksHtml += `<text x="${x}" y="${lineY+14}" text-anchor="middle" font-size="11" fill="#f0f0ff">${Math.round(val)}</text>`;
+  }
+
+  // Markers (points on the line)
+  let markersHtml = '';
+  markers.forEach(m => {
+    const x = padX + (m.value - min) / span * (W - 2*padX);
+    markersHtml += `<circle cx="${x}" cy="${lineY}" r="5" fill="#FFD600"/>`;
+    markersHtml += `<text x="${x}" y="${lineY - 16}" text-anchor="middle" font-size="11" font-weight="700" fill="#FFD600">${m.label}</text>`;
+  });
+
+  return `<div style="margin:0.5rem 0;background:#0d0d18;border:1px solid #2e2e4e;border-radius:10px;padding:0.25rem 0.5rem;overflow:hidden;">
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block;margin:0 auto;">
+      <line x1="${padX}" y1="${lineY}" x2="${W-padX}" y2="${lineY}" stroke="#888aaa" stroke-width="1.5"/>
+      <polygon points="${padX-8},${lineY} ${padX},${lineY-4} ${padX},${lineY+4}" fill="#888aaa"/>
+      <polygon points="${W-padX+8},${lineY} ${W-padX},${lineY-4} ${W-padX},${lineY+4}" fill="#888aaa"/>
+      ${ticksHtml}${markersHtml}
+    </svg>
+  </div>`;
+}
+
+function renderGrid(v) {
+  const cols = v.cols || 6;
+  const rows = v.rows || 5;
+  const shaded = v.shaded || 0;
+  const cellSize = Math.min(32, Math.floor(300 / cols));
+  const W = cols * cellSize + 2;
+  const H = rows * cellSize + 2;
+  let cells = '';
+  let count = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      count++;
+      const x = 1 + c * cellSize;
+      const y = 1 + r * cellSize;
+      const filled = count <= shaded;
+      cells += `<rect x="${x}" y="${y}" width="${cellSize}" height="${cellSize}" fill="${filled ? '#1565C0' : '#0d0d18'}" stroke="#2e2e4e" stroke-width="0.5"/>`;
+    }
+  }
+  return `<div style="margin:0.5rem 0;background:#0d0d18;border:1px solid #2e2e4e;border-radius:10px;padding:0.5rem;overflow:hidden;">
+    <div style="font-size:0.72rem;color:#888aaa;margin-bottom:4px;">Each square = 1 sq cm</div>
+    <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block;">
+      ${cells}
+    </svg>
+  </div>`;
+}
+
+function submitAnswer(idx) {
+  const gs = gameState;
+  const q = gs._currentQ;
+  const topic = gs._currentTopic;
+  const chosen = gs._options[idx];
+  const wasCorrect = chosen.trim() === q.answer.trim();
+
+  document.querySelectorAll('.opt-btn').forEach((btn,i) => {
+    btn.disabled = true;
+    if (gs._options[i].trim() === q.answer.trim()) btn.classList.add('correct');
+    else if (i === idx && !wasCorrect) btn.classList.add('wrong');
+  });
+
+  gs.history.push({topic, question:q.question, options:q.options, answer:q.answer, userAnswer:chosen, wasCorrect, explanation:q.explanation});
+  if (!gs.topicPerf[topic]) gs.topicPerf[topic] = {correct:0,total:0};
+  gs.topicPerf[topic].total++;
+
+  // State updates happen IMMEDIATELY so internal score / HP / streak are
+  // correct — but the visual animation, sound, and HP bar update are
+  // deferred by 1 second so the player has a beat to register their
+  // choice and read the explanation before the fight scene reacts.
+  const hadStreak = gs.streak >= 2;
+  if (wasCorrect) {
+    gs.correct++; gs.streak++;
+    gs.bestStreak = Math.max(gs.bestStreak, gs.streak);
+    gs.topicPerf[topic].correct++;
+    const dmg = gs.streak >= 3 ? 15 : 10;
+    gs.enemyHp = Math.max(0, gs.enemyHp - dmg);
+    gs.score += gs.streak >= 3 ? 150 : 100;
+  } else {
+    gs.streak = 0;
+    gs.playerHp = Math.max(0, gs.playerHp - 10);
+  }
+
+  markDot(gs.currentQ, wasCorrect);
+  gs.currentQ++;
+
+  // Show inline explanation immediately if wrong (kid reads while waiting).
+  if (!wasCorrect) {
+    const explainBox = document.createElement('div');
+    explainBox.style.cssText = 'background:#1a0a0a;border:2px solid #E53935;border-left:4px solid #E53935;border-radius:10px;padding:0.9rem 1rem;animation:fadeInUp 0.3s ease-out;';
+    explainBox.innerHTML = `
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#E53935;margin-bottom:0.35rem;">💡 Here's why:</div>
+      <div style="font-size:0.9rem;line-height:1.6;color:#e0d0d0;">${q.explanation}</div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:0.4rem;">Correct answer: <span style="color:#00e676;font-weight:700;">${q.answer}</span></div>
+    `;
+    document.getElementById('questionZone').appendChild(explainBox);
+  }
+
+  const streakAtHit = gs.streak;
+  setTimeout(() => {
+    if (wasCorrect) {
+      if (streakAtHit >= 2) sfxCombo(streakAtHit); else sfxHit();
+      showHit(streakAtHit);
+    } else {
+      if (hadStreak) sfxStreakBreak(); else sfxWrong();
+      showBlock();
+    }
+    updateHpBars();
+    document.getElementById('nextBtn').classList.add('show');
+  }, 1000);
+}
+
+// ══ THREE.JS FIGHTER SCENE ══
+let threeScene, threeCamera, threeRenderer, threeAnimFrame;
+let playerMesh, enemyMesh, playerGroup, enemyGroup;
+let threeAction = null; // 'punch'|'kick'|'recoil'|'block'|'enemypunch'
+let threeActionTimer = 0;
+let threeIdleT = 0;
+
+function initThree() {
+  const canvas = document.getElementById('threeCanvas');
+  if (!canvas || typeof THREE === 'undefined') return;
+  if (threeRenderer) { threeRenderer.dispose(); cancelAnimationFrame(threeAnimFrame); }
+
+  const W = canvas.clientWidth || 600;
+  const H = canvas.clientHeight || 220;
+
+  threeScene = new THREE.Scene();
+  threeScene.background = new THREE.Color(0x080814);
+  threeScene.fog = new THREE.Fog(0x080814, 12, 22);
+
+  threeCamera = new THREE.PerspectiveCamera(55, W/H, 0.1, 100);
+  threeCamera.position.set(0, 2.2, 7);
+  threeCamera.lookAt(0, 1.5, 0);
+
+  threeRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  threeRenderer.setSize(W, H, false);
+  threeRenderer.shadowMap.enabled = true;
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x334466, 0.8);
+  threeScene.add(ambient);
+  const keyLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  keyLight.position.set(3, 6, 4);
+  keyLight.castShadow = true;
+  threeScene.add(keyLight);
+  const rimL = new THREE.DirectionalLight(0x2244ff, 0.6);
+  rimL.position.set(-4, 3, -2);
+  threeScene.add(rimL);
+  const rimR = new THREE.DirectionalLight(0xff2222, 0.4);
+  rimR.position.set(4, 2, -2);
+  threeScene.add(rimR);
+
+  // Floor
+  const floorGeo = new THREE.PlaneGeometry(20, 20);
+  const floorMat = new THREE.MeshLambertMaterial({ color: 0x111122 });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI/2;
+  floor.receiveShadow = true;
+  threeScene.add(floor);
+
+  // Floor lines
+  for (let i = -5; i <= 5; i++) {
+    const lg = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(i, 0.01, -5), new THREE.Vector3(i, 0.01, 5)
+    ]);
+    const lm = new THREE.LineBasicMaterial({ color: 0x1a1a3a });
+    threeScene.add(new THREE.Line(lg, lm));
+    const lg2 = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-5, 0.01, i), new THREE.Vector3(5, 0.01, i)
+    ]);
+    threeScene.add(new THREE.Line(lg2, lm));
+  }
+
+  playerGroup = buildFighter(0x1565C0, 0xFFD600, false);
+  playerGroup.position.set(-2.2, 0, 0);
+  threeScene.add(playerGroup);
+
+  enemyGroup = buildFighter(0xb71c1c, 0xFFD600, true);
+  enemyGroup.position.set(2.2, 0, 0);
+  threeScene.add(enemyGroup);
+
+  // Particle system
+  initParticles3D();
+
+  threeAnimLoop();
+
+  // Resize observer
+  new ResizeObserver(() => {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (w && h) {
+      threeCamera.aspect = w/h;
+      threeCamera.updateProjectionMatrix();
+      threeRenderer.setSize(w, h, false);
+    }
+  }).observe(canvas);
+}
+
+function makeLimb(w, h, d, color) {
+  return new THREE.Mesh(
+    new THREE.BoxGeometry(w, h, d),
+    new THREE.MeshLambertMaterial({ color })
+  );
+}
+
+function buildFighter(bodyColor, accentColor, isEnemy) {
+  const g = new THREE.Group();
+  const skin = 0xFFCC99;
+  const dir = isEnemy ? -1 : 1;
+  const capeColor = isEnemy ? 0x5a0000 : 0x0a2060;
+  const bootColor = isEnemy ? 0x5a0000 : 0x0d3a7a;
+  const matBody = () => new THREE.MeshLambertMaterial({ color: bodyColor });
+  const matAccent = () => new THREE.MeshLambertMaterial({ color: accentColor });
+  const matSkin = () => new THREE.MeshLambertMaterial({ color: skin });
+
+  // ── Torso (tapered cylinder — wider shoulders, narrower waist) ──
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, 0.85, 16), matBody());
+  torso.position.y = 1.55;
+  torso.castShadow = true;
+  g.add(torso);
+  g._torso = torso;
+
+  // Chest stripe (accent across pecs)
+  const chest = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.04), matAccent());
+  chest.position.set(0, 1.78, 0.34);
+  g.add(chest);
+
+  // Belt
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.13, 16), matAccent());
+  belt.position.y = 1.17;
+  g.add(belt);
+
+  // ── Head group (sphere + mask + visor) ──
+  const headG = new THREE.Group();
+  headG.position.set(0, 2.32, 0);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 14), matSkin());
+  head.castShadow = true;
+  headG.add(head);
+  // Mask = upper hemisphere shell
+  const mask = new THREE.Mesh(
+    new THREE.SphereGeometry(0.335, 18, 10, 0, Math.PI*2, 0, Math.PI/2.1),
+    new THREE.MeshLambertMaterial({ color: bodyColor, side: THREE.DoubleSide })
+  );
+  mask.position.y = 0.02;
+  headG.add(mask);
+  // Visor stripe
+  const visor = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 0.09, 0.05),
+    new THREE.MeshLambertMaterial({ color: 0xffffff })
+  );
+  visor.position.set(0, 0.07, 0.27);
+  headG.add(visor);
+  // Eye dots on visor
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000022 });
+  const eL = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), eyeMat);
+  eL.position.set(0.13 * dir, 0.07, 0.305);
+  headG.add(eL);
+  const eR = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), eyeMat);
+  eR.position.set(-0.13 * dir, 0.07, 0.305);
+  headG.add(eR);
+  g.add(headG);
+  g._head = headG;
+
+  // ── Cape ──
+  const capeGeo = new THREE.BufferGeometry();
+  const cv = new Float32Array([
+    -0.35,2.0,0, 0.35,2.0,0, -0.45,0.8,-0.25,
+    0.35,2.0,0, 0.45,0.8,-0.25, -0.45,0.8,-0.25,
+    -0.45,0.8,-0.25, 0.45,0.8,-0.25, -0.28,0.2,-0.18,
+    0.45,0.8,-0.25, 0.28,0.2,-0.18, -0.28,0.2,-0.18,
+  ]);
+  capeGeo.setAttribute('position', new THREE.BufferAttribute(cv, 3));
+  capeGeo.computeVertexNormals();
+  const cape = new THREE.Mesh(capeGeo, new THREE.MeshLambertMaterial({ color: capeColor, side: THREE.DoubleSide }));
+  g.add(cape);
+
+  // ── Arm with shoulder → elbow → wrist hierarchy ──
+  function buildArm(xOffset) {
+    const shoulder = new THREE.Group();
+    shoulder.position.set(xOffset, 1.88, 0);
+    // Shoulder ball
+    const sBall = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), matBody());
+    shoulder.add(sBall);
+    // Upper arm cylinder
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.5, 10), matBody());
+    upper.position.y = -0.25;
+    upper.castShadow = true;
+    shoulder.add(upper);
+    // Elbow group at end of upper arm — pivot for forearm bend
+    const elbow = new THREE.Group();
+    elbow.position.y = -0.5;
+    shoulder.add(elbow);
+    const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.085, 0.45, 10), matBody());
+    forearm.position.y = -0.225;
+    elbow.add(forearm);
+    const wrist = new THREE.Group();
+    wrist.position.y = -0.45;
+    elbow.add(wrist);
+    const fist = new THREE.Mesh(new THREE.SphereGeometry(0.135, 10, 8), matSkin());
+    fist.position.y = -0.13;
+    wrist.add(fist);
+    shoulder._elbow = elbow;
+    shoulder._wrist = wrist;
+    return shoulder;
+  }
+  // "front" = the arm on the side facing the opponent
+  const frontArm = buildArm(dir * 0.42);
+  const backArm = buildArm(-dir * 0.42);
+  g.add(frontArm); g.add(backArm);
+  g._frontArm = frontArm;
+  g._backArm = backArm;
+
+  // ── Leg with hip → knee hierarchy ──
+  function buildLeg(xOffset) {
+    const hip = new THREE.Group();
+    hip.position.set(xOffset, 1.15, 0);
+    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.12, 0.55, 10), matBody());
+    thigh.position.y = -0.275;
+    thigh.castShadow = true;
+    hip.add(thigh);
+    const knee = new THREE.Group();
+    knee.position.y = -0.55;
+    hip.add(knee);
+    const calf = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.105, 0.55, 10), matBody());
+    calf.position.y = -0.275;
+    knee.add(calf);
+    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.22, 0.42),
+      new THREE.MeshLambertMaterial({ color: bootColor }));
+    boot.position.set(0, -0.6, 0.08);
+    knee.add(boot);
+    hip._knee = knee;
+    return hip;
+  }
+  const frontLeg = buildLeg(dir * 0.18);
+  const backLeg = buildLeg(-dir * 0.18);
+  g.add(frontLeg); g.add(backLeg);
+  g._frontLeg = frontLeg;
+  g._backLeg = backLeg;
+
+  if (isEnemy) g.rotation.y = Math.PI;
+  return g;
+}
+
+// 3D particles
+let particles3D = [], particleGeos = [], particleMats = [];
+function initParticles3D() {
+  particles3D = [];
+}
+function spawnParticles3D(x, y, color, count) {
+  if (!threeScene) return;
+  for (let i = 0; i < count; i++) {
+    const geo = new THREE.SphereGeometry(0.06 + Math.random()*0.08, 4, 4);
+    const mat = new THREE.MeshBasicMaterial({ color });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x + (Math.random()-0.5)*0.3, y + Math.random()*0.3, (Math.random()-0.5)*0.3);
+    const spd = 0.08 + Math.random()*0.12;
+    const ang = Math.random() * Math.PI * 2;
+    m.userData.vx = Math.cos(ang) * spd;
+    m.userData.vy = 0.08 + Math.random()*0.1;
+    m.userData.vz = (Math.random()-0.5)*0.06;
+    m.userData.life = 1.0;
+    m.userData.decay = 0.04 + Math.random()*0.03;
+    threeScene.add(m);
+    particles3D.push(m);
+  }
+}
+
+// ── Combo animation state ──
+// Replaces the old single-slot `threeAction` system. Drives streak-aware
+// multi-phase animations (jab → 3-hit → spin kick → flying uppercut) and
+// orchestrates enemy recoil + camera shake/dolly.
+let comboAnim = null;        // { streak, t, duration, apexFired, hitTimes[], isEnemy?, slamFired? }
+let enemyRecoil = null;      // { t, duration, magnitude }
+let camShake = 0;            // residual shake amount (decays each frame)
+let camDolly = 0;            // 0=default zoom, 1=zoomed in
+const CAM_BASE = { x: 0, y: 2.2, z: 7 };
+
+function _lerp(a, b, t) { return a + (b - a) * t; }
+function _easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+function _easeIn(t) { return t * t * t; }
+
+function _resetLimbs(g) {
+  if (!g) return;
+  ['_frontArm','_backArm','_frontLeg','_backLeg'].forEach(k => {
+    const j = g[k];
+    if (!j) return;
+    j.rotation.set(0, 0, 0);
+    if (j._elbow) j._elbow.rotation.set(0, 0, 0);
+    if (j._knee) j._knee.rotation.set(0, 0, 0);
+  });
+  if (g._head) g._head.rotation.set(0, 0, 0);
+}
+
+function _resetPlayerPose() {
+  if (!playerGroup) return;
+  playerGroup.position.set(-2.2, 0, 0);
+  playerGroup.rotation.set(0, 0, 0);
+  _resetLimbs(playerGroup);
+}
+function _resetEnemyPose() {
+  if (!enemyGroup) return;
+  enemyGroup.position.set(2.2, 0, 0);
+  enemyGroup.rotation.set(0, Math.PI, 0);
+  _resetLimbs(enemyGroup);
+}
+
+function triggerCombo(streak) {
+  const dur = streak >= 10 ? 1.6 : streak >= 5 ? 1.4 : streak >= 3 ? 1.4 : 0.9;
+  comboAnim = { streak, t: 0, duration: dur, apexFired: false, hitTimes: [], slamFired: false };
+  if (streak >= 5) camDolly = 1;
+}
+
+function triggerEnemyAttack() {
+  comboAnim = { isEnemy: true, t: 0, duration: 0.95, apexFired: false };
+}
+
+function _spawnHitSparks(streak) {
+  const col = streak>=10?0xff00ff:streak>=5?0xFFD600:streak>=3?0xff6600:0x00e676;
+  const count = streak>=10?60:streak>=5?40:streak>=3?25:15;
+  const wp = new THREE.Vector3();
+  if (enemyGroup) enemyGroup.getWorldPosition(wp);
+  spawnParticles3D(wp.x || 1.8, 1.7, col, count);
+}
+
+function _spawnEnemyHitSparks() {
+  const wp = new THREE.Vector3();
+  if (playerGroup) playerGroup.getWorldPosition(wp);
+  spawnParticles3D(wp.x || -1.8, 1.7, 0xe53935, 15);
+}
+
+function _startEnemyRecoil(mag) {
+  enemyRecoil = { t: 0, duration: 0.45, magnitude: mag };
+}
+
+function _fireApex(streak) {
+  if (!comboAnim || comboAnim.apexFired) return;
+  comboAnim.apexFired = true;
+  _spawnHitSparks(streak);
+  _startEnemyRecoil(streak >= 10 ? 1.2 : streak >= 5 ? 0.9 : streak >= 3 ? 0.6 : 0.4);
+  if (streak >= 10) camShake = 0.6;
+  else if (streak >= 5) camShake = 0.3;
+  else camShake = 0.1;
+}
+
+// ── Single jab (streak 0/1/2) ──
+function _animJab(g, t) {
+  const arm = g._frontArm;
+  if (t < 0.2) {
+    const k = _easeOut(t / 0.2);
+    arm.rotation.x = 0.5 * k;
+    arm._elbow.rotation.x = -0.6 * k;
+    g.position.x = -2.2 - 0.15 * k;
+  } else if (t < 0.45) {
+    const k = _easeOut((t - 0.2) / 0.25);
+    arm.rotation.x = _lerp(0.5, -1.7, k);
+    arm._elbow.rotation.x = _lerp(-0.6, 0.1, k);
+    g.position.x = _lerp(-2.35, -1.65, k);
+    g.rotation.y = _lerp(0, 0.25, k);
+    if (k > 0.8) _fireApex(comboAnim.streak);
+  } else if (t < 0.55) {
+    arm.rotation.x = -1.7;
+    arm._elbow.rotation.x = 0.1;
+    g.position.x = -1.65;
+    g.rotation.y = 0.25;
+  } else {
+    const k = (t - 0.55) / 0.45;
+    arm.rotation.x = _lerp(-1.7, 0, k);
+    arm._elbow.rotation.x = _lerp(0.1, 0, k);
+    g.position.x = _lerp(-1.65, -2.2, k);
+    g.rotation.y = _lerp(0.25, 0, k);
+  }
+}
+
+// ── 3-hit combo: jab → cross → hook (streak 3-4) ──
+function _animThreeHit(g, t) {
+  if (t < 0.33) {
+    const k = t / 0.33;
+    const ext = Math.sin(k * Math.PI);
+    g._frontArm.rotation.x = -ext * 1.5;
+    g._frontArm._elbow.rotation.x = (1 - ext) * 0.4 - 0.1;
+    g.position.x = -2.2 + ext * 0.35;
+    if (k > 0.4 && !comboAnim.hitTimes[0]) {
+      comboAnim.hitTimes[0] = 1;
+      _spawnHitSparks(comboAnim.streak);
+      _startEnemyRecoil(0.3);
+    }
+  } else if (t < 0.66) {
+    g._frontArm.rotation.x = 0; g._frontArm._elbow.rotation.x = 0;
+    const k = (t - 0.33) / 0.33;
+    const ext = Math.sin(k * Math.PI);
+    g._backArm.rotation.x = -ext * 1.8;
+    g._backArm._elbow.rotation.x = (1 - ext) * 0.5 - 0.1;
+    g.position.x = -2.2 + ext * 0.5;
+    g.rotation.y = ext * 0.25;
+    if (k > 0.4 && !comboAnim.hitTimes[1]) {
+      comboAnim.hitTimes[1] = 1;
+      _spawnHitSparks(comboAnim.streak);
+      _startEnemyRecoil(0.4);
+    }
+  } else {
+    g._backArm.rotation.x = 0; g._backArm._elbow.rotation.x = 0;
+    g.rotation.y = 0;
+    const k = (t - 0.66) / 0.34;
+    const ext = Math.sin(k * Math.PI);
+    g._frontArm.rotation.z = -ext * 1.3;   // hook swings sideways
+    g._frontArm.rotation.x = -ext * 0.5;
+    g._frontArm._elbow.rotation.x = -0.8 + (1 - ext) * 0.7;
+    g.position.x = -2.2 + ext * 0.6;
+    g.rotation.y = -ext * 0.3;
+    if (k > 0.5 && !comboAnim.hitTimes[2]) {
+      comboAnim.hitTimes[2] = 1;
+      _fireApex(comboAnim.streak);   // big particles + shake on final hit
+    }
+    if (t > 0.95) {
+      g._frontArm.rotation.z = 0;
+      g._frontArm.rotation.x = 0;
+      g._frontArm._elbow.rotation.x = 0;
+    }
+  }
+}
+
+// ── Spin kick (streak 5-9) ──
+function _animSpinKick(g, t) {
+  if (t < 0.2) {
+    const k = t / 0.2;
+    g.position.y = -0.08 * k;
+    g.rotation.y = -0.3 * k;
+    g._frontLeg.rotation.x = 0.1 * k;
+    g._frontLeg._knee.rotation.x = 0.3 * k;
+  } else if (t < 0.5) {
+    const k = (t - 0.2) / 0.3;
+    g.position.y = _lerp(-0.08, 0.25, k);
+    g.rotation.y = _lerp(-0.3, Math.PI * 1.7, k);
+    g._frontLeg.rotation.x = _lerp(0.1, -1.5, k);
+    g._frontLeg._knee.rotation.x = _lerp(0.3, 0.6, k);
+    g.position.x = _lerp(-2.2, -1.5, k);
+  } else if (t < 0.65) {
+    const k = (t - 0.5) / 0.15;
+    g.rotation.y = _lerp(Math.PI * 1.7, Math.PI * 2.2, k);
+    g._frontLeg.rotation.x = -1.5;
+    g._frontLeg._knee.rotation.x = _lerp(0.6, 0, k);  // straighten on impact
+    g.position.x = -1.5;
+    g.position.y = 0.25;
+    if (k > 0.4 && !comboAnim.apexFired) _fireApex(comboAnim.streak);
+  } else {
+    const k = (t - 0.65) / 0.35;
+    g.position.y = _lerp(0.25, 0, k);
+    g.rotation.y = _lerp(Math.PI * 2.2, Math.PI * 2, k);
+    g._frontLeg.rotation.x = _lerp(-1.5, 0, k);
+    g._frontLeg._knee.rotation.x = 0;
+    g.position.x = _lerp(-1.5, -2.2, k);
+    if (t > 0.95) g.rotation.y = 0;
+  }
+}
+
+// ── Flying uppercut + ground slam (streak 10+) ──
+function _animUltra(g, t) {
+  if (t < 0.15) {
+    const k = t / 0.15;
+    g.position.y = -0.3 * k;
+    g._frontArm.rotation.x = 0.8 * k;
+    g._frontArm._elbow.rotation.x = -0.5 * k;
+    g._frontLeg.rotation.x = -0.4 * k;
+    g._frontLeg._knee.rotation.x = 0.9 * k;
+  } else if (t < 0.45) {
+    const k = (t - 0.15) / 0.3;
+    g.position.y = _lerp(-0.3, 1.6, _easeOut(k));
+    g.position.x = _lerp(-2.2, -0.6, _easeOut(k));
+    g._frontArm.rotation.x = _lerp(0.8, -2.5, _easeOut(k));
+    g._frontArm._elbow.rotation.x = _lerp(-0.5, 0, k);
+    g._frontLeg.rotation.x = _lerp(-0.4, 0.3, k);
+    g._frontLeg._knee.rotation.x = _lerp(0.9, 0, k);
+    if (k > 0.6 && !comboAnim.apexFired) {
+      _fireApex(comboAnim.streak);
+      camShake = 0.5;
+    }
+  } else if (t < 0.6) {
+    g.position.y = 1.6;
+    g.position.x = -0.6;
+    g._frontArm.rotation.x = -2.5;
+    g.rotation.z = -0.15 * Math.sin((t - 0.45) / 0.15 * Math.PI);
+  } else if (t < 0.85) {
+    const k = (t - 0.6) / 0.25;
+    g.position.y = _lerp(1.6, 0, _easeIn(k));
+    g.position.x = _lerp(-0.6, -0.9, k);
+    g._frontArm.rotation.x = _lerp(-2.5, -2.7, k);
+    g.rotation.z = 0;
+    if (k > 0.85 && !comboAnim.slamFired) {
+      comboAnim.slamFired = true;
+      camShake = 1.0;
+      _spawnHitSparks(comboAnim.streak);
+      _startEnemyRecoil(1.6);
+    }
+  } else {
+    const k = (t - 0.85) / 0.15;
+    g.position.y = 0;
+    g.position.x = _lerp(-0.9, -2.2, k);
+    g._frontArm.rotation.x = _lerp(-2.7, 0, k);
+    g._frontArm._elbow.rotation.x = 0;
+  }
+}
+
+// ── Enemy attack (wrong answer): enemy punches, player slides back ──
+function _animEnemyAttack(t) {
+  const e = enemyGroup, p = playerGroup;
+  if (!e || !p) return;
+  if (t < 0.22) {
+    const k = t / 0.22;
+    e._frontArm.rotation.x = 0.5 * k;
+    e._frontArm._elbow.rotation.x = -0.6 * k;
+    e.position.x = 2.2 + 0.15 * k;
+  } else if (t < 0.45) {
+    const k = (t - 0.22) / 0.23;
+    e._frontArm.rotation.x = _lerp(0.5, -1.7, _easeOut(k));
+    e._frontArm._elbow.rotation.x = _lerp(-0.6, 0.1, k);
+    e.position.x = _lerp(2.35, 1.55, _easeOut(k));
+    if (k > 0.75 && !comboAnim.apexFired) {
+      comboAnim.apexFired = true;
+      _spawnEnemyHitSparks();
+      camShake = 0.2;
+    }
+  } else if (t < 0.65) {
+    const k = (t - 0.45) / 0.2;
+    e._frontArm.rotation.x = -1.7;
+    e.position.x = 1.55;
+    p.position.x = -2.2 - 0.55 * Math.sin(k * Math.PI);
+    p.rotation.z = 0.22 * Math.sin(k * Math.PI);
+  } else {
+    const k = (t - 0.65) / 0.35;
+    e._frontArm.rotation.x = _lerp(-1.7, 0, k);
+    e._frontArm._elbow.rotation.x = _lerp(0.1, 0, k);
+    e.position.x = _lerp(1.55, 2.2, k);
+    p.position.x = -2.2;
+    p.rotation.z = 0;
+  }
+}
+
+function threeAnimLoop() {
+  threeAnimFrame = requestAnimationFrame(threeAnimLoop);
+  if (!threeRenderer || !threeScene) return;
+  threeIdleT += 0.02;
+  const dt = 1 / 60;
+
+  // Idle bob — only when no animation is playing
+  if (playerGroup && !comboAnim) {
+    playerGroup.position.y = Math.sin(threeIdleT) * 0.05;
+    playerGroup._frontArm.rotation.x = Math.sin(threeIdleT * 0.7) * 0.07;
+    playerGroup._backArm.rotation.x = Math.sin(threeIdleT * 0.7 + 1) * 0.06;
+  }
+  if (enemyGroup && !comboAnim && !enemyRecoil) {
+    enemyGroup.position.y = Math.sin(threeIdleT + 0.8) * 0.05;
+    enemyGroup._frontArm.rotation.x = Math.sin(threeIdleT * 0.7 + 0.5) * 0.07;
+    enemyGroup._backArm.rotation.x = Math.sin(threeIdleT * 0.7 + 1.5) * 0.06;
+  }
+
+  // Combo animation
+  if (comboAnim) {
+    comboAnim.t += dt;
+    const t01 = Math.min(1, comboAnim.t / comboAnim.duration);
+    if (comboAnim.isEnemy) {
+      _animEnemyAttack(t01);
+    } else if (playerGroup) {
+      if (comboAnim.streak >= 10) _animUltra(playerGroup, t01);
+      else if (comboAnim.streak >= 5) _animSpinKick(playerGroup, t01);
+      else if (comboAnim.streak >= 3) _animThreeHit(playerGroup, t01);
+      else _animJab(playerGroup, t01);
+    }
+    if (t01 >= 1) {
+      comboAnim = null;
+      _resetPlayerPose();
+    }
+  }
+
+  // Enemy recoil — independent of combo, can run while combo finishes
+  if (enemyRecoil && enemyGroup) {
+    enemyRecoil.t += dt;
+    const t01 = Math.min(1, enemyRecoil.t / enemyRecoil.duration);
+    const k = Math.sin(t01 * Math.PI);
+    enemyGroup.position.x = 2.2 + k * enemyRecoil.magnitude;
+    enemyGroup.rotation.z = -k * 0.22;
+    enemyGroup.position.y = k * 0.1;
+    if (t01 >= 1) { enemyRecoil = null; _resetEnemyPose(); }
+  }
+
+  // Camera shake + dolly
+  if (threeCamera) {
+    let cx = CAM_BASE.x, cy = CAM_BASE.y, cz = CAM_BASE.z;
+    if (camDolly > 0) {
+      cz = _lerp(CAM_BASE.z, 4.6, camDolly);
+      camDolly *= 0.95;
+      if (camDolly < 0.02) camDolly = 0;
+    }
+    if (camShake > 0) {
+      cx += (Math.random() - 0.5) * camShake;
+      cy += (Math.random() - 0.5) * camShake;
+      camShake *= 0.82;
+      if (camShake < 0.02) camShake = 0;
+    }
+    threeCamera.position.set(cx, cy, cz);
+    threeCamera.lookAt(0, 1.5, 0);
+  }
+
+  // Particles
+  for (let i = particles3D.length - 1; i >= 0; i--) {
+    const p = particles3D[i];
+    p.userData.vy -= 0.004;
+    p.position.x += p.userData.vx;
+    p.position.y += p.userData.vy;
+    p.position.z += p.userData.vz;
+    p.userData.life -= p.userData.decay;
+    p.material.opacity = p.userData.life;
+    p.material.transparent = true;
+    if (p.userData.life <= 0) {
+      threeScene.remove(p);
+      p.geometry.dispose();
+      particles3D.splice(i, 1);
+    }
+  }
+
+  threeRenderer.render(threeScene, threeCamera);
+}
+
+// Legacy single-action trigger kept as a no-op shim so any straggling
+// callers don't throw. New code should call triggerCombo / triggerEnemyAttack.
+function triggerThreeAction(action) { /* deprecated */ }
+
+function showHit(streak) {
+  // Hit text
+  const el = document.getElementById('hitText');
+  const words = streak>=10?['ULTRA COMBO!!']:streak>=5?['PERFECT!!','MONSTER!!','UNSTOPPABLE!']:streak>=3?['MASSIVE COMBO!','DOMINATING!','LETHAL!']:['POW!','HIT!','BOOM!','YES!'];
+  el.textContent = words[Math.floor(Math.random()*words.length)];
+  const colors = streak>=10?'#ff00ff':streak>=5?'#FFD600':streak>=3?'#ff6600':'#00e676';
+  el.style.color = colors;
+  el.style.fontSize = streak>=10?'3.5rem':streak>=5?'3rem':streak>=3?'2.6rem':'2rem';
+  el.style.transform = 'translate(-50%,-50%) scale(0)';
+  el.style.transition = 'none';
+  requestAnimationFrame(() => {
+    el.style.transition = 'transform 0.15s cubic-bezier(0.17,0.67,0.3,1.5)';
+    el.style.transform = 'translate(-50%,-50%) scale(1)';
+    setTimeout(() => {
+      el.style.transition = 'transform 0.3s ease,opacity 0.3s ease';
+      el.style.transform = 'translate(-50%,-60%) scale(0.8)';
+      el.style.opacity = '0';
+      setTimeout(() => { el.style.opacity='1'; el.style.transform='translate(-50%,-50%) scale(0)'; }, 350);
+    }, 500);
+  });
+
+  // Combo display — escalating
+  const combo = document.getElementById('comboDisplay');
+  if (streak >= 2) {
+    const size = streak>=10?2.8:streak>=5?2.2:streak>=3?1.8:1.2;
+    const col = streak>=10?'#ff00ff':streak>=5?'#FFD600':streak>=3?'#ff6600':'#00e676';
+    combo.innerHTML = `<span style="font-size:${size}rem;color:${col};text-shadow:0 0 20px ${col},2px 2px 0 #000;">${streak}x COMBO!</span>`;
+    combo.style.transform = `translateX(-50%) scale(${1 + streak*0.03})`;
+  } else { combo.innerHTML = ''; combo.style.transform = 'translateX(-50%) scale(1)'; }
+
+  // Three.js combo — animation, sparks, recoil & camera shake all wired up
+  // inside triggerCombo / the animation engine based on streak tier.
+  triggerCombo(streak);
+
+  // HP bar pulse on low health
+  const eHp = gameState.enemyHp;
+  if (eHp <= 30) {
+    const bar = document.getElementById('enemyHpBar');
+    bar.style.transition = 'none';
+    bar.style.background = '#ff0000';
+    setTimeout(() => {
+      bar.style.transition = 'background 0.3s';
+      bar.style.background = 'linear-gradient(90deg,#E53935,#ff6b6b)';
+    }, 200);
+  }
+
+  // Announcer voice
+  if (streak === 3) announceVoice('MASSIVE COMBO!', 1.1, 0.9);
+  else if (streak === 5) announceVoice('PERFECT!', 1.3, 0.8);
+  else if (streak === 10) announceVoice('ULTRA COMBO!!!', 0.9, 0.7);
+  else if (streak > 10 && streak % 3 === 0) announceVoice('UNSTOPPABLE!', 1.0, 0.8);
+
+  // PERFECT full-screen overlay at 5+
+  if (streak === 5 || streak === 10) showPerfectOverlay(streak);
+}
+
+function showBlock() {
+  const el = document.getElementById('hitText');
+  const words = ['BLOCKED!','MISS!','OUCH!','COUNTER!'];
+  el.textContent = words[Math.floor(Math.random()*words.length)];
+  el.style.color = '#E53935';
+  el.style.fontSize = '2rem';
+  el.style.transform = 'translate(-50%,-50%) scale(0)';
+  el.style.transition = 'none';
+  requestAnimationFrame(() => {
+    el.style.transition = 'transform 0.15s cubic-bezier(0.17,0.67,0.3,1.5)';
+    el.style.transform = 'translate(-50%,-50%) scale(1)';
+    setTimeout(() => {
+      el.style.transition = 'transform 0.3s ease,opacity 0.3s ease';
+      el.style.transform = 'translate(-50%,-60%) scale(0.8)';
+      el.style.opacity = '0';
+      setTimeout(() => { el.style.opacity='1'; el.style.transform='translate(-50%,-50%) scale(0)'; }, 350);
+    }, 500);
+  });
+  const combo = document.getElementById('comboDisplay');
+  combo.innerHTML = '';
+  combo.style.transform = 'translateX(-50%) scale(1)';
+
+  triggerEnemyAttack();
+
+  // Player HP pulse red
+  const pBar = document.getElementById('playerHpBar');
+  pBar.style.transition = 'none';
+  pBar.style.background = '#ff0000';
+  setTimeout(() => {
+    pBar.style.transition = 'background 0.4s';
+    pBar.style.background = 'linear-gradient(90deg,#00e676,#69f0ae)';
+  }, 250);
+}
+
+function showPerfectOverlay(streak) {
+  const ov = document.getElementById('perfectOverlay');
+  const txt = document.getElementById('perfectText');
+  const sub = document.getElementById('perfectSub');
+  ov.style.display = 'flex';
+  ov.style.background = streak>=10?'rgba(128,0,128,0.35)':'rgba(255,214,0,0.2)';
+  txt.textContent = streak>=10?'ULTRA COMBO!!!':'PERFECT!!';
+  sub.textContent = streak>=10?`${streak} IN A ROW!`:'5 IN A ROW!';
+  txt.style.color = streak>=10?'#ff00ff':'#FFD600';
+  txt.style.textShadow = streak>=10?'0 0 60px #ff00ff,4px 4px 0 #000':'0 0 60px #FFD600,4px 4px 0 #000';
+
+  // Spray extra particles
+  for (let i = 0; i < 8; i++) {
+    setTimeout(() => spawnParticles3D((Math.random()-0.5)*3, 1+Math.random()*2, streak>=10?0xff00ff:0xFFD600, 20), i*80);
+  }
+
+  setTimeout(() => {
+    ov.style.display = 'none';
+  }, 1800);
+}
+
+
+function afterQuestion() {
+  const gs = gameState;
+  if (gs.playerHp<=0 || gs.enemyHp<=0 || gs.currentQ>=gs.totalQ) endGame();
+  else loadNextQuestion();
+}
+
+// ══ END GAME + SAVE ══
+function endGame() {
+  const gs = gameState;
+  const won = gs.enemyHp<=0 || (gs.playerHp>0 && gs.currentQ>=gs.totalQ && gs.correct/Math.max(1,gs.currentQ)>=0.6);
+  const pct = gs.currentQ>0 ? Math.round(gs.correct/gs.currentQ*100) : 0;
+  const todayStr = new Date().toISOString().slice(0,10);
+
+  // Save to persistent store — UNLESS this is a test session.
+  if (!gs.testMode) {
+    const store = loadStore();
+    store.sessions.push({
+      date: todayStr,
+      charAlias: gs.char.alias,
+      charEmoji: gs.char.emoji,
+      enemyName: gs.enemy.name,
+      diff: gs.diff,
+      total: gs.currentQ,
+      correct: gs.correct,
+      score: gs.score,
+      bestStreak: gs.bestStreak,
+      won,
+      topicPerf: gs.topicPerf,
+      questionLog: gs.history.map(h => h.question), // for cross-session deduplication
+    });
+    store.totalCorrect += gs.correct;
+    store.totalAnswered += gs.currentQ;
+    store.totalScore += gs.score;
+    store.bestStreak = Math.max(store.bestStreak, gs.bestStreak);
+    store.lastPlayed = todayStr;
+    // Merge topic perf
+    for (const [t, p] of Object.entries(gs.topicPerf)) {
+      if (!store.topicPerf[t]) store.topicPerf[t] = {correct:0,total:0};
+      store.topicPerf[t].correct += p.correct;
+      store.topicPerf[t].total += p.total;
+    }
+    saveStore(store);
+  } else {
+    console.log('[MathBrawl] Test mode — session NOT saved to localStorage');
+  }
+
+  // Show results
+  showScreen('results');
+  if (won) {
+    sfxVictory();
+    // Victory dance briefly before switching screens
+  } else {
+    sfxDefeat();
+  }
+  const titleEl = document.getElementById('resultTitle');
+  titleEl.textContent = won ? '🏆 VICTORY!' : '💀 DEFEATED!';
+  titleEl.className = 'result-title '+(won?'win':'lose');
+  document.getElementById('resultSub').textContent = won ? `${gs.char.alias} dominates!` : 'Train harder. Come back stronger.';
+  document.getElementById('statCorrect').textContent = `${gs.correct}/${gs.currentQ}`;
+  document.getElementById('statPct').textContent = pct+'%';
+  document.getElementById('statStreak').textContent = gs.bestStreak;
+  document.getElementById('statScore').textContent = gs.score;
+
+  // Session topic pillars
+  const sessTopics = TOPICS.filter(t => gs.topicPerf[t] && gs.topicPerf[t].total>0).map(t => {
+    const p = gs.topicPerf[t];
+    const pc = Math.round(p.correct/p.total*100);
+    const col = pc>=80?'#00e676':pc>=60?'#FFD600':'#E53935';
+    return `<div class="pillar-row"><div class="pillar-label">${t}</div><div class="pillar-track"><div class="pillar-fill" style="width:${pc}%;background:${col}"></div></div><div class="pillar-pct">${pc}%</div></div>`;
+  }).join('');
+  document.getElementById('sessionTopics').innerHTML = sessTopics || '<p style="color:var(--muted);font-size:0.85rem">No topic data.</p>';
+
+  // Strengths / gaps
+  const strengths=[], gaps=[];
+  for (const [t,p] of Object.entries(gs.topicPerf)) {
+    if (!p.total) continue;
+    const r = p.correct/p.total;
+    if (r>=0.8) strengths.push(t); else if (r<0.6) gaps.push(t);
+  }
+  const sec = document.getElementById('strengthGapSection');
+  sec.innerHTML = (strengths.length||gaps.length) ? `
+    ${strengths.length?`<div class="analysis-title" style="margin-bottom:0.4rem">✅ Strong</div><div style="margin-bottom:0.75rem">${strengths.map(s=>`<span class="strength-tag">${s}</span>`).join('')}</div>`:''}
+    ${gaps.length?`<div class="analysis-title" style="margin-bottom:0.4rem">⚠️ Practice More</div><div>${gaps.map(g=>`<span class="gap-tag">${g}</span>`).join('')}</div>`:''}
+  ` : '';
+
+  // Wrong review
+  const wrong = gs.history.filter(h => !h.wasCorrect);
+  document.getElementById('wrongList').innerHTML = wrong.length===0
+    ? '<p style="color:#00e676;font-weight:700">No wrong answers this session! 🎉</p>'
+    : wrong.map(w=>`<div class="wrong-item"><div class="wrong-q">${w.question}</div><div class="wrong-detail">You answered: <span class="got">${w.userAnswer}</span> &nbsp;|&nbsp; Correct: <span class="correct">${w.answer}</span></div><div class="wrong-explanation">${w.explanation}</div></div>`).join('');
+
+  generateCoachFeedback(gs, store, pct, won);
+}
+
+async function generateCoachFeedback(gs, store, pct, won) {
+  const summary = Object.entries(gs.topicPerf).map(([t,p])=>`${t}: ${p.correct}/${p.total}`).join(', ');
+  const overallPct = store.totalAnswered>0?Math.round(store.totalCorrect/store.totalAnswered*100):pct;
+  const sessCount = store.sessions.length;
+  const wrongTopics = gs.history.filter(h=>!h.wasCorrect).map(h=>h.topic);
+  const now = new Date();
+  const daysLeft = Math.max(0, Math.ceil((EXAM_DATE-now)/86400000));
+
+  const prompt = `You are a supportive math coach. A 4th-grade student is preparing for the NWEA MAP 5th-grade test in Birmingham, MI on Monday (${daysLeft} days away).
+
+This session: ${gs.correct}/${gs.currentQ} correct (${pct}%), best streak: ${gs.bestStreak}, result: ${won?'WIN':'LOSS'}
+Topic performance this session: ${summary}
+Wrong answer topics: ${wrongTopics.join(', ')||'none'}
+Total training: ${sessCount} sessions, ${overallPct}% cumulative accuracy
+
+Write 3-4 sentences of honest, encouraging, specific feedback:
+1. Acknowledge the session result genuinely
+2. Name their clearest strength from today
+3. Name the single most important area to practice before Monday, with ONE specific study tip
+4. A short pump-up line for the next session
+
+Write like you're talking to a 10-year-old kid who loves Invincible. No markdown, no bullet points, just plain text.`;
+
+  const coachEl = document.getElementById('coachAnalysis');
+  try {
+    const text = await callClaude(prompt, 280);
+    coachEl.className = 'analysis-content';
+    coachEl.textContent = text.trim();
+  } catch(e) {
+    coachEl.className = 'analysis-content';
+    coachEl.textContent = 'Coach feedback unavailable — check your connection.';
+  }
+}
+
+function confirmExitGame() {
+  if (confirm('Exit this session? Your progress so far will NOT be saved.')) {
+    showScreen('camp');
+  }
+}
+
+function playAgain(newChar) {
+  if (newChar) {
+    selectedChar = null;
+    document.querySelectorAll('.char-card').forEach(el=>el.classList.remove('selected'));
+    document.getElementById('startBtn').disabled = true;
+    showScreen('title');
+  } else {
+    startFight();
+  }
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  if (name==='camp') { buildCampDashboard(); stopBgMusic(); }
+  if (name==='results') { playBgMusic('bgResults', 0.4); }
+  if (name==='apikey') {
+    const saved = getApiKey();
+    const input = document.getElementById('apikeyInput');
+    if (saved) input.value = saved;
+    document.getElementById('apikeyError').textContent = '';
+  }
+}
+
+
+// ══ AUDIO ENGINE v2.5 ══
+// MP3 files take priority — synthesized sounds are fallback if MP3 not found.
+// Drop MP3 files in the SAME FOLDER as invincible-math-brawl.html.
+// File names are listed below — rename your MP3s to match exactly.
+
+const MP3 = {
+  // ── BACKGROUND MUSIC ──
+  // Loops continuously during the fight screen
+  bgFight:      'music-fight.mp3',       // Main fight background music (loops)
+  bgIntro:      'music-intro.mp3',       // Intro screen background music (loops)
+  bgResults:    'music-results.mp3',     // Results screen music (loops)
+
+  // ── SOUND EFFECTS ──
+  hit:          'sfx-hit.mp3',           // Single correct answer hit
+  combo3:       'sfx-combo3.mp3',        // 3x combo
+  combo5:       'sfx-combo5.mp3',        // 5x combo / PERFECT
+  combo10:      'sfx-combo10.mp3',       // 10x ULTRA COMBO
+  wrong:        'sfx-wrong.mp3',         // Wrong answer buzzer
+  streakBreak:  'sfx-streak-break.mp3',  // Losing a combo streak
+  victory:      'sfx-victory.mp3',       // Win screen fanfare
+  defeat:       'sfx-defeat.mp3',        // Lose screen
+  select:       'sfx-select.mp3',        // UI click / character select
+  fightStart:   'sfx-fight-start.mp3',   // FIGHT! horn at battle start
+  newQuestion:  'sfx-new-question.mp3',  // Each new question appears
+
+  // ── ANNOUNCER VOICE ──
+  // If these exist they override the browser TTS voice
+  announceMassive:   'voice-massive-combo.mp3',   // "MASSIVE COMBO!"
+  announcePerfect:   'voice-perfect.mp3',          // "PERFECT!"
+  announceUltra:     'voice-ultra-combo.mp3',      // "ULTRA COMBO!!!"
+  announceUnstop:    'voice-unstoppable.mp3',      // "UNSTOPPABLE!"
+};
+
+// Loaded audio elements cache
+const audioCache = {};
+const mp3Ready = {};  // true only when file confirmed loaded
+let audioMuted = false;
+let bgMusicEl = null;
+let bgMusicKey = null;
+
+// Get (or create) the Audio element for a key. Caches one element per key.
+// Missing files fail silently — synth fallback will be used instead.
+function getOrCreateAudio(key) {
+  if (audioCache[key]) return audioCache[key];
+  // Prefer an inline <audio id="audio-<key>"> if one exists in the HTML.
+  const inline = document.getElementById('audio-' + key);
+  if (inline) { audioCache[key] = inline; return inline; }
+  try {
+    const a = new Audio(MP3[key]);
+    a.preload = 'auto';
+    a.addEventListener('canplaythrough', () => { mp3Ready[key] = true; }, { once: true });
+    a.addEventListener('error', () => { mp3Ready[key] = false; });
+    audioCache[key] = a;
+    return a;
+  } catch(e) { return null; }
+}
+
+// No-op now — inline <audio> elements handle bg music preload; sfx are
+// created lazily on first use. (Previously this pre-created Audio elements
+// for every slot, which flooded the console with 404s for missing files.)
+function probeAllMp3s() {}
+
+// Stop and reset the currently-playing background music element.
+function stopBgMusic() {
+  if (bgMusicEl) {
+    try { bgMusicEl.pause(); } catch(e) {}
+    try { bgMusicEl.currentTime = 0; } catch(e) {}
+  }
+  bgMusicEl = null;
+  bgMusicKey = null;
+}
+
+// Play a short MP3 (sfx). Returns true if play was attempted, false otherwise.
+// Always returns true when an element exists — caller treats this as "MP3 path taken".
+function playMp3(key, volume) {
+  if (audioMuted) return false;
+  const a = audioCache[key] || getOrCreateAudio(key);
+  if (!a) return false;
+  try {
+    a.currentTime = 0;
+    a.volume = volume || 0.85;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {});
+    return mp3Ready[key] === true;
+  } catch(e) { return false; }
+}
+
+// Start looping background music using the inline <audio> element if available
+// (more reliable on file://). Falls back to dynamic Audio() if the inline tag
+// isn't present.
+function playBgMusic(key, volume) {
+  if (audioMuted) return;
+  if (bgMusicKey === key && bgMusicEl && !bgMusicEl.paused) return;
+  console.log('[MathBrawl] playBgMusic:', key, MP3[key]);
+  _startBgMusic(key, volume);
+}
+
+function _startBgMusic(key, volume) {
+  stopBgMusic();
+  let a = document.getElementById('audio-' + key);
+  if (!a) a = getOrCreateAudio(key);
+  if (!a) { console.warn('[MathBrawl] no audio element for', key); return; }
+  console.log('[MathBrawl] BG el state:', key,
+    'src=', a.currentSrc || a.src,
+    'readyState=', a.readyState,    // 0=nothing, 1=metadata, 2=current, 3=future, 4=enough
+    'networkState=', a.networkState, // 0=empty, 1=idle, 2=loading, 3=no-source
+    'paused=', a.paused,
+    'muted=', a.muted,
+    'volume=', a.volume,
+    'duration=', a.duration);
+  try {
+    a.loop = true;
+    a.muted = false;
+    a.volume = volume || 0.35;
+    try { a.currentTime = 0; } catch(e) {}
+    bgMusicEl = a;
+    bgMusicKey = key;
+    const p = a.play();
+    if (p && p.then) {
+      p.then(() => { console.log('[MathBrawl] BG music PLAYING:', MP3[key], 'currentTime=', a.currentTime); })
+       .catch(err => { console.warn('[MathBrawl] BG music play() REJECTED:', MP3[key], err && err.name, err && err.message); });
+    } else {
+      console.log('[MathBrawl] BG music play() returned non-promise (legacy browser?)');
+    }
+  } catch(e) { console.warn('[MathBrawl] BG music threw:', e); }
+}
+
+// ── Web Audio fallback (used when MP3 not found) ──
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playTone(frequency, type, duration, gainVal, startTime, ctx) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, startTime);
+  gain.gain.setValueAtTime(gainVal, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  osc.start(startTime); osc.stop(startTime + duration);
+}
+function playNoise(duration, gainVal, startTime, ctx) {
+  const bufSize = ctx.sampleRate * duration;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass'; filter.frequency.value = 800;
+  src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  gain.gain.setValueAtTime(gainVal, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  src.start(startTime); src.stop(startTime + duration);
+}
+
+// ── Sound effect functions — MP3 first, synth fallback ──
+function sfxHit() {
+  if (audioMuted) return;
+  if (playMp3('hit', 0.8)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  playTone(180,'sine',0.12,0.9,now,ctx);
+  playTone(90,'sine',0.18,0.7,now+0.03,ctx);
+  playNoise(0.08,0.4,now,ctx);
+}
+function sfxCombo(streak) {
+  if (audioMuted) return;
+  const key = streak>=10?'combo10':streak>=5?'combo5':'combo3';
+  if (playMp3(key, 0.85)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  const notes = streak>=5?[261,329,392,523,659,784]:streak>=3?[261,329,523,659]:[261,392];
+  notes.forEach((f,i) => {
+    playTone(f,'square',0.12,0.35,now+i*0.07,ctx);
+    playTone(f*2,'sine',0.08,0.2,now+i*0.07,ctx);
+  });
+  playTone(120,'sine',0.15,0.8,now,ctx);
+}
+function sfxWrong() {
+  if (audioMuted) return;
+  if (playMp3('wrong', 0.8)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  const osc = ctx.createOscillator(); const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(220,now);
+  osc.frequency.exponentialRampToValueAtTime(80,now+0.3);
+  gain.gain.setValueAtTime(0.5,now);
+  gain.gain.exponentialRampToValueAtTime(0.001,now+0.35);
+  osc.start(now); osc.stop(now+0.35);
+  playTone(60,'sine',0.2,0.6,now+0.05,ctx);
+}
+function sfxVictory() {
+  if (audioMuted) return;
+  if (playMp3('victory', 0.85)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  [261,329,392,523,659,784,1047].forEach((f,i) => {
+    playTone(f,'square',0.2,0.3,now+i*0.1,ctx);
+    playTone(f,'sine',0.15,0.2,now+i*0.1,ctx);
+  });
+  [523,659,784,1047].forEach(f => playTone(f,'sine',0.6,0.25,now+0.75,ctx));
+  playTone(130,'sine',0.6,0.7,now+0.75,ctx);
+}
+function sfxDefeat() {
+  if (audioMuted) return;
+  if (playMp3('defeat', 0.8)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  [392,329,261,196,130].forEach((f,i) => {
+    playTone(f,'sine',0.25,0.3,now+i*0.18,ctx);
+    playTone(f*0.5,'sine',0.15,0.2,now+i*0.18,ctx);
+  });
+}
+function sfxSelect() {
+  if (audioMuted) return;
+  if (playMp3('select', 0.7)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  playTone(523,'sine',0.08,0.3,now,ctx);
+  playTone(659,'sine',0.08,0.3,now+0.07,ctx);
+}
+function sfxFightStart() {
+  if (audioMuted) return;
+  if (playMp3('fightStart', 0.9)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  [130,164,196,261].forEach((f,i) => playTone(f,'sawtooth',0.18,0.4,now+i*0.06,ctx));
+  playNoise(0.1,0.5,now,ctx);
+}
+function sfxNewQuestion() {
+  if (audioMuted) return;
+  if (playMp3('newQuestion', 0.5)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  playTone(440,'sine',0.06,0.15,now,ctx);
+  playTone(550,'sine',0.06,0.12,now+0.05,ctx);
+}
+function sfxStreakBreak() {
+  if (audioMuted) return;
+  if (playMp3('streakBreak', 0.8)) return;
+  const ctx = getCtx(); const now = ctx.currentTime;
+  playNoise(0.3,0.7,now,ctx);
+  playTone(100,'sine',0.3,0.5,now,ctx);
+  playTone(80,'sine',0.25,0.4,now+0.05,ctx);
+}
+
+// ── Mute toggle — pauses bg music too ──
+function toggleMute() {
+  audioMuted = !audioMuted;
+  const btn = document.getElementById('muteBtn');
+  if (btn) btn.textContent = audioMuted ? '🔇 Sound Off' : '🔊 Sound On';
+  if (audioMuted) {
+    if (bgMusicEl) bgMusicEl.pause();
+  } else {
+    if (bgMusicEl) bgMusicEl.play().catch(()=>{});
+    sfxSelect();
+  }
+}
+
+// ── Announcer — MP3 first, TTS fallback ──
+let announcerVoice = null;
+function loadAnnouncerVoice() {
+  if (!window.speechSynthesis) return;
+  const tryLoad = () => {
+    const voices = speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes('David')||v.name.includes('Google UK English Male')||v.name.includes('Daniel')||v.name.includes('Alex'));
+    announcerVoice = preferred || voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+  };
+  tryLoad();
+  speechSynthesis.onvoiceschanged = tryLoad;
+}
+function announceVoice(text, pitch, rate) {
+  if (audioMuted) return;
+  // Try MP3 version first
+  const keyMap = {
+    'MASSIVE COMBO!': 'announceMassive',
+    'PERFECT!': 'announcePerfect',
+    'ULTRA COMBO!!!': 'announceUltra',
+    'UNSTOPPABLE!': 'announceUnstop',
+  };
+  const mp3Key = keyMap[text];
+  if (mp3Key && playMp3(mp3Key, 0.9)) return;
+  // TTS fallback
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.pitch = pitch || 1.0;
+  utt.rate = rate || 0.9;
+  utt.volume = 0.85;
+  if (announcerVoice) utt.voice = announcerVoice;
+  speechSynthesis.speak(utt);
+}
+function getApiKey() {
+  try { return localStorage.getItem('mathbrawl_apikey') || ''; } catch(e) { return ''; }
+}
+
+function testApiKey() {
+  const input = document.getElementById('apikeyInput');
+  const errEl = document.getElementById('apikeyError');
+  const key = (input.value || '').trim();
+  if (!key) { errEl.style.color='var(--red)'; errEl.textContent = 'Paste your key first.'; return; }
+  errEl.style.color = 'var(--muted)';
+  errEl.textContent = 'Testing connection...';
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 20,
+      messages: [{role:'user', content:'say ok'}]
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.content && d.content[0]) {
+      errEl.style.color = '#00e676';
+      errEl.textContent = '✓ Key works! Hit Save to continue.';
+    } else if (d.error) {
+      errEl.style.color = 'var(--red)';
+      errEl.textContent = 'API error: ' + d.error.message;
+    } else {
+      errEl.style.color = 'var(--red)';
+      errEl.textContent = 'Unexpected response: ' + JSON.stringify(d).slice(0,100);
+    }
+  })
+  .catch(e => {
+    errEl.style.color = 'var(--red)';
+    errEl.textContent = 'Connection failed: ' + e.message + ' — make sure the server is running (START-MATH-BRAWL.bat)';
+  });
+}
+
+function saveApiKey() {
+  const input = document.getElementById('apikeyInput');
+  const errEl = document.getElementById('apikeyError');
+  const key = (input.value || '').trim();
+  errEl.textContent = '';
+  if (!key) { errEl.textContent = 'Please paste your API key.'; return; }
+  if (!key.startsWith('sk-ant-')) {
+    errEl.textContent = 'That doesn\'t look right — keys start with sk-ant-';
+    return;
+  }
+  try { localStorage.setItem('mathbrawl_apikey', key); } catch(e) {}
+  sfxSelect();
+  showScreen('camp');
+}
+
+// ══ INTRO SCREEN ENGINE ══
+let introRAF = null;
+let introParticles = [];
+let introCtx2d = null;
+let introW = 0, introH = 0;
+let introTime = 0;
+let introDone = false;
+
+function startIntro() {
+  const canvas = document.getElementById('introCanvas');
+  if (!canvas) return;
+  introCtx2d = canvas.getContext('2d');
+  introW = canvas.width = window.innerWidth;
+  introH = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    introW = canvas.width = window.innerWidth;
+    introH = canvas.height = window.innerHeight;
+  });
+
+  // Spawn background particles continuously
+  for (let i = 0; i < 80; i++) spawnIntroBgParticle(true);
+
+  introRAF = requestAnimationFrame(introLoop);
+}
+
+// User clicks "TAP TO BEGIN" — this is the first user gesture, which unlocks
+// audio playback. Start the music + cinematic from here.
+let _introStarted = false;
+function beginIntro() {
+  if (_introStarted) return;
+  _introStarted = true;
+  console.log('[MathBrawl] beginIntro fired');
+  try {
+    const startBtn = document.getElementById('introStart');
+    if (startBtn) startBtn.classList.add('hide');
+  } catch(e) { console.warn('hide start btn:', e); }
+  try { getCtx(); } catch(e) { console.warn('getCtx:', e); }
+  try { playBgMusic('bgIntro', 0.4); } catch(e) { console.warn('playBgMusic:', e); }
+  try { runIntroCinematic(); } catch(e) { console.warn('runIntroCinematic:', e); }
+  // Hard fallback: no matter what, show TAP TO FIGHT after 4.5s so the user
+  // is never stuck on the intro screen.
+  setTimeout(() => {
+    const tap = document.getElementById('introTap');
+    if (tap) tap.classList.add('show');
+  }, 4500);
+}
+
+function runIntroCinematic() {
+  // Sequence of hype events
+  setTimeout(() => {
+    // First flash + MATH BRAWL logo pop
+    flashIntro('#FFD600', 0.7);
+    document.getElementById('introLogo').classList.add('pop');
+    sfxFightStart();
+    spawnComboWords(['MATH BRAWL!'], '#FFD600');
+  }, 300);
+
+  setTimeout(() => {
+    document.getElementById('introSub').classList.add('slide');
+  }, 800);
+
+  setTimeout(() => {
+    flashIntro('#E53935', 0.5);
+    spawnComboWords(['COMBO!!'], '#ff6600');
+    sfxCombo(3);
+    burstParticles(introW/2, introH/2, '#FFD600', 60);
+  }, 1200);
+
+  setTimeout(() => {
+    spawnComboWords(['MASSIVE!!'], '#ff6600');
+    sfxCombo(5);
+    burstParticles(introW*0.3, introH*0.4, '#E53935', 40);
+    burstParticles(introW*0.7, introH*0.4, '#1565C0', 40);
+    announceVoice('Math Brawl', 1.2, 0.85);
+  }, 1700);
+
+  setTimeout(() => {
+    flashIntro('#ffffff', 0.9);
+    spawnComboWords(['ULTRA!!'], '#ff00ff');
+    sfxCombo(10);
+    burstParticles(introW/2, introH/2, '#ff00ff', 80);
+    burstParticles(introW*0.2, introH*0.6, '#FFD600', 30);
+    burstParticles(introW*0.8, introH*0.6, '#FFD600', 30);
+    announceVoice('ULTRA COMBO!!!', 0.85, 0.8);
+  }, 2300);
+
+  setTimeout(() => {
+    document.getElementById('introTagline').classList.add('fade');
+    spawnComboWords(['5TH GRADE', 'MAP PREP'], '#00e676');
+    sfxVictory();
+    burstParticles(introW/2, introH*0.7, '#00e676', 50);
+  }, 3000);
+
+  setTimeout(() => {
+    flashIntro('#FFD600', 0.4);
+    burstParticles(introW/2, introH/2, '#FFD600', 100);
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => burstParticles(
+        Math.random()*introW, Math.random()*introH,
+        ['#FFD600','#E53935','#1565C0','#00e676','#ff00ff'][Math.floor(Math.random()*5)],
+        30
+      ), i * 120);
+    }
+  }, 3800);
+
+  setTimeout(() => {
+    const tap = document.getElementById('introTap');
+    tap.classList.add('show');
+    // Continuous mini bursts
+    const iv = setInterval(() => {
+      if (introDone) { clearInterval(iv); return; }
+      burstParticles(
+        Math.random() * introW,
+        Math.random() * introH,
+        ['#FFD600','#E53935','#ff00ff','#00e676'][Math.floor(Math.random()*4)],
+        15
+      );
+    }, 600);
+  }, 4400);
+}
+
+function introLoop() {
+  if (!introCtx2d || introDone) return;
+  introTime++;
+  const ctx = introCtx2d;
+
+  // Dark fade trail
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(0, 0, introW, introH);
+
+  // Background star field
+  for (let i = introParticles.length - 1; i >= 0; i--) {
+    const p = introParticles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= p.decay;
+    p.size *= 0.98;
+
+    if (p.life <= 0 || p.size < 0.3) {
+      if (p.isBg) { Object.assign(p, makeBgParticle(false)); }
+      else { introParticles.splice(i, 1); continue; }
+    }
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.life) * (p.isBg ? 0.6 : 1);
+    if (p.isStar) {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      ctx.fill();
+    } else if (p.isSpark) {
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = p.size * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - p.vx * 6, p.y - p.vy * 6);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = p.color;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot + introTime * p.rotSpd);
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // Halftone dot grid overlay (subtle)
+  if (introTime % 3 === 0) {
+    ctx.fillStyle = 'rgba(255,214,0,0.015)';
+    for (let x = 0; x < introW; x += 24) {
+      for (let y = 0; y < introH; y += 24) {
+        if (Math.random() > 0.97) {
+          ctx.beginPath();
+          ctx.arc(x, y, 1.5, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  introRAF = requestAnimationFrame(introLoop);
+}
+
+function makeBgParticle(randomY) {
+  return {
+    x: Math.random() * introW,
+    y: randomY ? Math.random() * introH : introH + 10,
+    vx: (Math.random() - 0.5) * 0.8,
+    vy: -(0.3 + Math.random() * 1.2),
+    size: 1 + Math.random() * 3,
+    life: 0.6 + Math.random() * 0.4,
+    decay: 0.003 + Math.random() * 0.004,
+    color: ['#FFD600','#E53935','#1565C0','#ffffff','#ff6600'][Math.floor(Math.random()*5)],
+    rot: Math.random() * Math.PI,
+    rotSpd: (Math.random()-0.5)*0.05,
+    isBg: true,
+    isStar: Math.random() > 0.5,
+    isSpark: false,
+  };
+}
+
+function spawnIntroBgParticle(randomY) {
+  introParticles.push(makeBgParticle(randomY));
+}
+
+function burstParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const spd = 2 + Math.random() * 8;
+    const isSpark = Math.random() > 0.4;
+    introParticles.push({
+      x, y,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd - 3,
+      size: isSpark ? 2 + Math.random()*3 : 4 + Math.random()*8,
+      life: 0.8 + Math.random()*0.2,
+      decay: 0.02 + Math.random()*0.03,
+      color,
+      rot: Math.random()*Math.PI,
+      rotSpd: (Math.random()-0.5)*0.15,
+      isBg: false, isStar: false, isSpark,
+    });
+  }
+}
+
+function flashIntro(color, intensity) {
+  const canvas = document.getElementById('introCanvas');
+  if (!canvas || !introCtx2d) return;
+  introCtx2d.fillStyle = color.replace(')', `,${intensity})`).replace('rgb','rgba').replace('#','rgba(').replace('rgba(','rgba(');
+  // Simple overlay flash via a div
+  const fl = document.createElement('div');
+  fl.style.cssText = `position:absolute;inset:0;background:${color};opacity:${intensity};pointer-events:none;z-index:13;transition:opacity 0.25s;`;
+  document.getElementById('screen-intro').appendChild(fl);
+  requestAnimationFrame(() => { fl.style.opacity = '0'; });
+  setTimeout(() => fl.remove(), 400);
+}
+
+function spawnComboWords(words, color) {
+  const container = document.getElementById('screen-intro');
+  words.forEach((word, wi) => {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      const x = 15 + Math.random() * 65;
+      const y = 15 + Math.random() * 60;
+      const rot = (Math.random()-0.5)*20;
+      el.className = 'intro-hit-word';
+      el.textContent = word;
+      el.style.cssText = `left:${x}%;top:${y}%;color:${color};text-shadow:3px 3px 0 #000,0 0 30px ${color};--rot:${rot}deg;transform-origin:center;`;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 750);
+    }, wi * 200);
+  });
+}
+
+function exitIntro() {
+  if (introDone) return;
+  introDone = true;
+  sfxSelect();
+  burstParticles(introW/2, introH/2, '#FFD600', 120);
+
+  const content = document.getElementById('introContent');
+  content.style.transition = 'transform 0.4s ease,opacity 0.4s ease';
+  content.style.transform = 'scale(1.3)';
+  content.style.opacity = '0';
+
+  setTimeout(() => {
+    cancelAnimationFrame(introRAF);
+    document.getElementById('screen-intro').style.display = 'none';
+    if (!getApiKey()) {
+      showScreen('apikey');
+    } else {
+      showScreen('camp');
+      buildCampDashboard();
+    }
+  }, 450);
+}
+
+// ── INIT ──
+buildCharGrid();
+probeAllMp3s(); // check for MP3 files in background — synth plays in the meantime
+// Always show intro first. Audio (music + sfx) is gated behind the
+// "TAP TO BEGIN" button because browsers block autoplay until the user
+// interacts with the page. beginIntro() starts the music + cinematic.
+showScreen('intro');
+startIntro();
+</script>
+</body>
+</html>
