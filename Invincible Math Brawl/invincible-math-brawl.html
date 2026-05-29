@@ -81,7 +81,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
 .readiness-fill{height:100%;border-radius:6px;transition:width 0.8s;}
 
 /* ── TITLE / CHAR SELECT ── */
-#screen-title{align-items:center;justify-content:center;text-align:center;position:relative;z-index:1;gap:1.5rem;padding:2rem;}
+#screen-title{align-items:center;justify-content:center;text-align:center;position:relative;z-index:1;gap:1.5rem;padding:2rem;background-image:url('char-select-bg.jpg');background-size:cover;background-position:center;background-repeat:no-repeat;}
+/* Dark overlay so text stays readable over the background image */
+#screen-title::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.55);z-index:0;pointer-events:none;}
+#screen-title > *{position:relative;z-index:1;}
 .title-logo{font-family:'Bangers',cursive;font-size:clamp(3rem,10vw,5rem);letter-spacing:4px;color:var(--yellow);text-shadow:4px 4px 0 #000,-2px -2px 0 var(--red);line-height:1;}
 .title-sub{font-family:'Bangers',cursive;font-size:clamp(1rem,3vw,1.6rem);letter-spacing:6px;color:var(--red);}
 .char-select-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem;width:100%;max-width:700px;}
