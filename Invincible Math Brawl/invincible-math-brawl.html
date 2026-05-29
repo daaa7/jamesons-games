@@ -336,6 +336,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
 .c2d-hit{animation:hit2d 0.52s ease-out forwards}
 @keyframes dash2d{0%{transform:rotate(0) scaleX(1)}25%{transform:rotate(-14deg) scaleX(1.1)}100%{transform:rotate(-9deg) scaleX(1.06)}}
 .c2d-dash{animation:dash2d 0.5s ease-out forwards}
+@keyframes enemyEnter{from{transform:scaleX(-1) translateX(-200px);opacity:0;}to{transform:scaleX(-1) translateX(0);opacity:1;}}
+.c2d-enter{animation:enemyEnter 0.55s cubic-bezier(0.17,0.67,0.12,1.3) forwards}
 
 /* ── QUEST MODE ── */
 #screen-quest,#screen-stageclear{align-items:center;justify-content:center;z-index:1;padding:2rem;gap:1.2rem;}
@@ -1523,9 +1525,11 @@ function submitAnswer(idx) {
     if (wasCorrect) {
       dashAttack('char-player-wrap', 'char-enemy-wrap', false, streakAtHit, () => {
         if (streakAtHit >= 2) sfxCombo(streakAtHit); else sfxHit();
-        showHit(streakAtHit);  // plays punch anim + hit text + particles at enemy position
+        showHit(streakAtHit);
         updateHpBars();
-        setTimeout(() => { document.getElementById('nextBtn').classList.add('show'); }, 440);
+        // On fatality streaks the animation takes ~2.4s — delay next button until after new enemy lands
+        const nextDelay = (streakAtHit === 3 || streakAtHit === 5 || streakAtHit === 10) ? 2400 : 440;
+        setTimeout(() => { document.getElementById('nextBtn').classList.add('show'); }, nextDelay);
       });
     } else {
       dashAttack('char-enemy-wrap', 'char-player-wrap', true, 0, () => {
@@ -2774,8 +2778,56 @@ function threeAnimLoop() {
 // callers don't throw. New code should call triggerCombo / triggerEnemyAttack.
 function triggerThreeAction(action) { /* deprecated */ }
 
+// ── STREAK FATALITY — fires on 3x / 5x / 10x combo ──────────────────────────
+function _streakFatality(streak) {
+  // Pick finisher type by streak level
+  const type = streak >= 10 ? 'spineRip' : streak >= 5 ? 'uppercut' : 'punchOff';
+
+  // Play finisher + blood splatter
+  _spawnBloodSplatter();
+  _playFinisherAnim(type);   // handles FATALITY text + speech
+
+  // After the animation settles, swap in a fresh enemy
+  setTimeout(() => {
+    _swapEnemy();
+  }, 1800);
+}
+
+function _swapEnemy() {
+  const gs = gameState;
+
+  // Pick a new enemy that isn't the same as the current one
+  const pool = (questState ? QUEST_ENEMY_POOL : ENEMIES)
+    .filter(e => e.name !== gs.enemy.name);
+  const next = pool[Math.floor(Math.random() * pool.length)];
+  gs.enemy = next;
+  gs.enemyHp = 100;
+
+  // Update the name plate
+  document.getElementById('enemyName').textContent = next.name;
+  updateHpBars();
+
+  // Swap enemy SVG and play entrance animation
+  const eWrap = document.getElementById('char-enemy-wrap');
+  const eEl   = document.getElementById('char-enemy');
+  if (eEl) {
+    eEl.innerHTML = CHAR_SVGS[next.charId] || CHAR_SVGS.omniman;
+    // Restore the wrapper transform that _playFinisherAnim may have altered
+    if (eWrap) { eWrap.style.transition = ''; eWrap.style.transform = 'scaleX(-1)'; eWrap.style.opacity = '1'; }
+    eEl.className = 'c2d-enter';
+    setTimeout(() => { eEl.className = 'c2d-idle'; }, 600);
+  }
+}
+
 function showHit(streak) {
-  // Check for finisher opportunity after dealing damage
+  // Streak fatality on 3 / 5 / 10 — kills current enemy, new one slides in
+  if (streak === 3 || streak === 5 || streak === 10) {
+    _streakFatality(streak);
+    // Still show hit text and combo display; next button appears after swap
+    return;
+  }
+
+  // Check for HP-based finisher opportunity
   _checkFinisher();
   // Hit text
   const el = document.getElementById('hitText');
