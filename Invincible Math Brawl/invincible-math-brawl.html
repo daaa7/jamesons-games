@@ -381,9 +381,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
      Declaring audio elements directly in HTML is more reliable on file:// than
      new Audio() — browser starts preloading on page load and the gesture
      unlock is more consistent. -->
-<audio id="audio-bgIntro" src="music-intro.mp3" preload="auto" loop></audio>
-<audio id="audio-bgFight" src="music-fight.mp3" preload="auto" loop></audio>
-<audio id="audio-bgResults" src="music-results.mp3" preload="auto" loop></audio>
+<audio id="audio-bgIntro" src="sounds/music-intro.mp3" preload="auto" loop></audio>
+<audio id="audio-bgFight" src="sounds/music-fight.mp3" preload="auto" loop></audio>
+<audio id="audio-bgResults" src="sounds/music-results.mp3" preload="auto" loop></audio>
 
 <!-- ══ INTRO SCREEN ══ -->
 <div id="screen-intro" class="screen active">
@@ -3082,29 +3082,29 @@ function showScreen(name) {
 const MP3 = {
   // ── BACKGROUND MUSIC ──
   // Loops continuously during the fight screen
-  bgFight:      'music-fight.mp3',       // Main fight background music (loops)
-  bgIntro:      'music-intro.mp3',       // Intro screen background music (loops)
-  bgResults:    'music-results.mp3',     // Results screen music (loops)
+  bgFight:      'sounds/music-fight.mp3',       // Main fight background music (loops)
+  bgIntro:      'sounds/music-intro.mp3',       // Intro screen background music (loops)
+  bgResults:    'sounds/music-results.mp3',     // Results screen music (loops)
 
   // ── SOUND EFFECTS ──
-  hit:          'sfx-hit.mp3',           // Single correct answer hit
-  combo3:       'sfx-combo3.mp3',        // 3x combo
-  combo5:       'sfx-combo5.mp3',        // 5x combo / PERFECT
-  combo10:      'sfx-combo10.mp3',       // 10x ULTRA COMBO
-  wrong:        'sfx-wrong.mp3',         // Wrong answer buzzer
-  streakBreak:  'sfx-streak-break.mp3',  // Losing a combo streak
-  victory:      'sfx-victory.mp3',       // Win screen fanfare
-  defeat:       'sfx-defeat.mp3',        // Lose screen
-  select:       'sfx-select.mp3',        // UI click / character select
-  fightStart:   'sfx-fight-start.mp3',   // FIGHT! horn at battle start
-  newQuestion:  'sfx-new-question.mp3',  // Each new question appears
+  hit:          'sounds/sfx-hit.mp3',           // Single correct answer hit
+  combo3:       'sounds/sfx-combo3.mp3',        // 3x combo
+  combo5:       'sounds/sfx-combo5.mp3',        // 5x combo / PERFECT
+  combo10:      'sounds/sfx-combo10.mp3',       // 10x ULTRA COMBO
+  wrong:        'sounds/sfx-wrong.mp3',         // Wrong answer buzzer
+  streakBreak:  'sounds/sfx-streak-break.mp3',  // Losing a combo streak
+  victory:      'sounds/sfx-victory.mp3',       // Win screen fanfare
+  defeat:       'sounds/sfx-defeat.mp3',        // Lose screen
+  select:       'sounds/sfx-select.mp3',        // UI click / character select
+  fightStart:   'sounds/sfx-fight-start.mp3',   // FIGHT! horn at battle start
+  newQuestion:  'sounds/sfx-new-question.mp3',  // Each new question appears
 
   // ── ANNOUNCER VOICE ──
   // If these exist they override the browser TTS voice
-  announceMassive:   'voice-massive-combo.mp3',   // "MASSIVE COMBO!"
-  announcePerfect:   'voice-perfect.mp3',          // "PERFECT!"
-  announceUltra:     'voice-ultra-combo.mp3',      // "ULTRA COMBO!!!"
-  announceUnstop:    'voice-unstoppable.mp3',      // "UNSTOPPABLE!"
+  announceMassive:   'sounds/voice-massive-combo.mp3',   // "MASSIVE COMBO!"
+  announcePerfect:   'sounds/voice-perfect.mp3',          // "PERFECT!"
+  announceUltra:     'sounds/voice-ultra-combo.mp3',      // "ULTRA COMBO!!!"
+  announceUnstop:    'sounds/voice-unstoppable.mp3',      // "UNSTOPPABLE!"
 };
 
 // Loaded audio elements cache
