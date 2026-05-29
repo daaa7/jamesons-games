@@ -1199,6 +1199,7 @@ RULES:
     }
     // Discard if a newer load started while this API call was in flight
     if (myLoadId !== _questionLoadId) return;
+    shuffleOptions(q); // randomise A/B/C/D position so correct answer isn't always first
     displayQuestion(q, topic);
   } catch(err) {
     qz.innerHTML = `<div class="loading-zone" style="color:var(--red);flex-direction:column;gap:0.5rem"><div>⚠ Error: ${err.message}</div><div style="font-size:0.75rem;color:var(--muted)">Check console (F12) for details</div><button onclick="loadNextQuestion()" style="margin-top:8px;background:var(--yellow);color:#000;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-weight:700">Retry</button></div>`;
@@ -1236,6 +1237,35 @@ async function callClaude(userPrompt, maxTok) {
 }
 
 let _questionReadyAt = 0; // timestamp when current question became answerable
+
+// Shuffle the A/B/C/D options so the correct answer lands in a random slot.
+// LLMs tend to put the correct answer first — this neutralises that bias.
+function shuffleOptions(q) {
+  if (!Array.isArray(q.options) || q.options.length < 2 || !q.answer) return q;
+
+  // Pull the text content out of each labelled option ("A) 42" → "42")
+  const strip = s => s.replace(/^[A-D]\)\s*/i, '').trim();
+  const correctBody = strip(q.answer);
+
+  // Fisher-Yates shuffle
+  const opts = [...q.options];
+  for (let i = opts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [opts[i], opts[j]] = [opts[j], opts[i]];
+  }
+
+  // Re-attach A / B / C / D labels and update the answer field to match
+  const letters = ['A','B','C','D'];
+  let newAnswer = q.answer;
+  q.options = opts.map((opt, i) => {
+    const body     = strip(opt);
+    const labelled = `${letters[i]}) ${body}`;
+    if (body === correctBody) newAnswer = labelled;
+    return labelled;
+  });
+  q.answer = newAnswer;
+  return q;
+}
 
 function displayQuestion(q, topic) {
   gameState._currentQ = q;
