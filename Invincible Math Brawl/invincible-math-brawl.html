@@ -342,6 +342,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
 @keyframes enemyEnter{from{transform:scaleX(-1) translateX(-200px);opacity:0;}to{transform:scaleX(-1) translateX(0);opacity:1;}}
 .c2d-enter{animation:enemyEnter 0.55s cubic-bezier(0.17,0.67,0.12,1.3) forwards}
 
+/* ── ARENA SELECT ── */
+#arenaSelectSection{width:100%;max-width:700px;}
+.arena-grid{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin-top:0.4rem;}
+.arena-card{width:110px;height:68px;border:3px solid var(--border);border-radius:8px;cursor:pointer;background-size:100% 100%;background-color:#111;background-position:center;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;transition:all 0.15s;flex-shrink:0;position:relative;}
+.arena-card:hover{border-color:var(--yellow);transform:translateY(-2px);box-shadow:0 4px 12px #0008;}
+.arena-card.selected{border-color:var(--yellow);box-shadow:0 0 18px #FFD60066;}
+.arena-card-label{font-family:'Bangers',cursive;font-size:0.72rem;letter-spacing:1px;background:rgba(0,0,0,0.72);color:#fff;padding:2px 6px;width:100%;text-align:center;}
+
 /* ── QUEST MODE ── */
 #screen-quest,#screen-stageclear{align-items:center;justify-content:center;z-index:1;padding:2rem;gap:1.2rem;}
 .quest-map{display:flex;align-items:center;gap:0;width:100%;max-width:700px;overflow-x:auto;padding:1rem 0;}
@@ -524,6 +532,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
       <input type="checkbox" id="testModeToggle" style="width:18px;height:18px;cursor:pointer;accent-color:var(--yellow);">
       <span>🧪 Test mode (no data saved)</span>
     </label>
+    <!-- Arena select — hidden until arenas are probed -->
+    <div id="arenaSelectSection" style="display:none;">
+      <p style="font-family:'Bangers',cursive;font-size:1rem;letter-spacing:3px;color:var(--yellow);margin-bottom:0;">SELECT ARENA</p>
+      <div class="arena-grid" id="arenaGrid"></div>
+    </div>
+
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
       <button class="btn-secondary" onclick="showScreen('camp')">← Camp Dashboard</button>
       <button class="btn-secondary" onclick="showScreen('quest')" style="font-size:1.1rem;padding:0.6rem 1.4rem;border-color:var(--red);color:var(--red);">⚔ QUEST MODE</button>
@@ -4222,30 +4236,70 @@ function speakFatality(msg) {
 
 // ── ARENA BACKGROUNDS ────────────────────────────────────────────────────────
 // Drop images named arena1.jpg … arena10.jpg in the arenas/ folder.
-// The game probes which ones exist and picks randomly each fight.
+// Probe on load, build a chooser on the title screen, use selection in fights.
 const _arenaPool = [];
+let _selectedArena = null; // null = random each fight
 
 (function probeArenas() {
+  let loaded = 0;
   for (let i = 1; i <= 10; i++) {
     const src = `arenas/arena${i}.jpg`;
     const img = new Image();
-    img.onload  = () => { _arenaPool.push(src); };
-    img.onerror = () => {};   // file missing — skip silently
+    img.onload = () => {
+      _arenaPool.push(src);
+      loaded++;
+      if (loaded === 1) _buildArenaSelect(); // show section as soon as first image loads
+      else _buildArenaSelect(); // rebuild each time to add new cards
+    };
+    img.onerror = () => {};
     img.src = src;
   }
 })();
 
+function _buildArenaSelect() {
+  const section = document.getElementById('arenaSelectSection');
+  const grid    = document.getElementById('arenaGrid');
+  if (!section || !grid || _arenaPool.length === 0) return;
+  section.style.display = '';
+
+  grid.innerHTML = '';
+
+  // Random card
+  const rnd = document.createElement('div');
+  rnd.className = 'arena-card' + (_selectedArena === null ? ' selected' : '');
+  rnd.title = 'Pick a random arena each fight';
+  rnd.innerHTML = `<div class="arena-card-label">🎲 RANDOM</div>`;
+  rnd.onclick = () => selectArena(null);
+  grid.appendChild(rnd);
+
+  // One card per arena image
+  _arenaPool.forEach((src, i) => {
+    const card = document.createElement('div');
+    card.className = 'arena-card' + (_selectedArena === src ? ' selected' : '');
+    card.style.backgroundImage = `url('${src}')`;
+    card.title = `Arena ${i + 1}`;
+    card.innerHTML = `<div class="arena-card-label">ARENA ${i + 1}</div>`;
+    card.onclick = () => selectArena(src);
+    grid.appendChild(card);
+  });
+}
+
+function selectArena(src) {
+  _selectedArena = src;
+  _buildArenaSelect(); // re-render to update selected highlight
+}
+
 function applyRandomArena() {
   const box = document.getElementById('arenaBox');
   if (!box) return;
-  if (_arenaPool.length === 0) {
-    // No arena images — use default dark background
-    box.style.backgroundImage = '';
-    return;
-  }
-  const src = _arenaPool[Math.floor(Math.random() * _arenaPool.length)];
-  box.style.backgroundImage  = `url('${src}')`;
-  box.style.backgroundSize   = '100% 100%'; // stretch to fill exact arena dimensions
+  if (_arenaPool.length === 0) { box.style.backgroundImage = ''; return; }
+
+  const src = _selectedArena !== null
+    ? _selectedArena
+    : _arenaPool[Math.floor(Math.random() * _arenaPool.length)];
+
+  box.style.backgroundImage = `url('${src}')`;
+  box.style.backgroundSize  = '100% 100%';
 }
 
 buildCharGrid();
