@@ -2952,6 +2952,43 @@ function afterQuestion() {
   else loadNextQuestion();
 }
 
+// ── Shared stat-saver — called by both endGame and _questStageWon ──────────────
+function _saveSessionStats(gs, won, durationMs) {
+  if (gs.testMode) {
+    console.log('[MathBrawl] Test mode — session NOT saved');
+    return;
+  }
+  const store = loadStore();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  store.sessions.push({
+    date:       todayStr,
+    charAlias:  gs.char.alias,
+    charEmoji:  gs.char.emoji,
+    enemyName:  gs.enemy ? gs.enemy.name : '?',
+    diff:       gs.diff,
+    total:      gs.currentQ,
+    correct:    gs.correct,
+    score:      gs.score,
+    bestStreak: gs.bestStreak,
+    won,
+    topicPerf:   gs.topicPerf,
+    questionLog: gs.history.map(h => h.question),
+    duration:    Math.round((durationMs || 0) / 1000),
+    mode:        gs.isQuest ? 'quest' : 'classic',
+  });
+  store.totalCorrect  += gs.correct;
+  store.totalAnswered += gs.currentQ;
+  store.totalScore    += gs.score;
+  store.bestStreak     = Math.max(store.bestStreak, gs.bestStreak);
+  store.lastPlayed     = todayStr;
+  for (const [t, p] of Object.entries(gs.topicPerf)) {
+    if (!store.topicPerf[t]) store.topicPerf[t] = { correct: 0, total: 0 };
+    store.topicPerf[t].correct += p.correct;
+    store.topicPerf[t].total   += p.total;
+  }
+  saveStore(store);
+}
+
 // ══ END GAME + SAVE ══
 function endGame() {
   const gs = gameState;
@@ -2974,39 +3011,7 @@ function endGame() {
   const pct = gs.currentQ>0 ? Math.round(gs.correct/gs.currentQ*100) : 0;
   const todayStr = new Date().toISOString().slice(0,10);
 
-  // Save to persistent store — UNLESS this is a test session.
-  if (!gs.testMode) {
-    const store = loadStore();
-    store.sessions.push({
-      date: todayStr,
-      charAlias: gs.char.alias,
-      charEmoji: gs.char.emoji,
-      enemyName: gs.enemy.name,
-      diff: gs.diff,
-      total: gs.currentQ,
-      correct: gs.correct,
-      score: gs.score,
-      bestStreak: gs.bestStreak,
-      won,
-      topicPerf: gs.topicPerf,
-      questionLog: gs.history.map(h => h.question), // for cross-session deduplication
-      duration: Math.round(sessionDuration / 1000),
-    });
-    store.totalCorrect += gs.correct;
-    store.totalAnswered += gs.currentQ;
-    store.totalScore += gs.score;
-    store.bestStreak = Math.max(store.bestStreak, gs.bestStreak);
-    store.lastPlayed = todayStr;
-    // Merge topic perf
-    for (const [t, p] of Object.entries(gs.topicPerf)) {
-      if (!store.topicPerf[t]) store.topicPerf[t] = {correct:0,total:0};
-      store.topicPerf[t].correct += p.correct;
-      store.topicPerf[t].total += p.total;
-    }
-    saveStore(store);
-  } else {
-    console.log('[MathBrawl] Test mode — session NOT saved to localStorage');
-  }
+  _saveSessionStats(gs, won, sessionDuration);
 
   // Show results
   showScreen('results');
@@ -3861,6 +3866,11 @@ function _questStageWon() {
   const qs = questState;
   const gs = gameState;
   if (gs._timerInterval) { clearInterval(gs._timerInterval); gs._timerInterval = null; }
+
+  // Save this stage's stats to the persistent store
+  const stageDuration = Date.now() - (gs.sessionStartTime || Date.now());
+  const stageWon = true;
+  _saveSessionStats(gs, stageWon, stageDuration);
 
   // Remove stage banner
   const banner = document.getElementById('stageBanner');
