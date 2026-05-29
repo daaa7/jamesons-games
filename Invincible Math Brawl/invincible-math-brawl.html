@@ -3904,7 +3904,7 @@ function _questStageWon() {
 
   if (gs.isBoss) {
     questState = null;
-    setTimeout(() => speakFatality('QUEST COMPLETE! YOU ARE INVINCIBLE!'), 600);
+    setTimeout(() => playMp3('fatality', 1.0), 600);
   }
 }
 
@@ -4005,7 +4005,7 @@ function _playFinisherAnim(type, onComplete) {
   setTimeout(() => {
     fatText.className = 'fin-fatality show';
     // Play fatality.mp3 — fall back to speech synthesis if file not loaded yet
-    if (!playMp3('fatality', 1.0)) speakFatality();
+    playMp3('fatality', 1.0);
   }, 400);
 
   // Clean up and hand off
