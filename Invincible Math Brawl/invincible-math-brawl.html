@@ -1611,7 +1611,8 @@ let glbPlayer = {
 
 // Character IDs that have a matching GLB file on disk
 const GLB_MAP = {
-  mark: 'invincible_invincible_guarding_the_globe.glb',
+  // GLB disabled for now — use SVG characters instead
+  // mark: 'invincible_invincible_guarding_the_globe.glb',
 };
 
 function _playGLBClip(glb, name, loop, fadeIn) {
@@ -2693,27 +2694,25 @@ function _getAuraLevel() {
   const correct = gs.correct || 0;
 
   // Streak → instant aura intensity
-  const fromStreak = streak >= 10 ? 4 : streak >= 5 ? 3 : streak >= 3 ? 2 : streak >= 1 ? 1 : 0;
+  const fromStreak = streak >= 5 ? 3 : streak >= 3 ? 2 : streak >= 1 ? 1 : 0;
 
   // Total correct → permanent base (grows every 5 correct, caps at 2)
   const fromCorrect = Math.min(2, Math.floor(correct / 5));
 
-  return Math.min(4, Math.max(fromStreak, fromCorrect));
+  return Math.min(3, Math.max(fromStreak, fromCorrect));
 }
 
 const _AURA_COLORS = [
   [],                                           // 0 — no aura
   ['#3a7fff', '#5599ff'],                       // 1 — cool blue
   ['#ff6600', '#ff9933', '#ffcc00'],            // 2 — orange heat
-  ['#FFD600', '#ffffff', '#ff9900'],            // 3 — gold blaze
-  ['#ff00ff', '#cc00ff', '#FFD600', '#ffffff'], // 4 — ultra violet
+  ['#ff00ff', '#cc00ff', '#FFD600', '#ffffff'], // 3 — purple + magenta + gold + white
 ];
 
 const _AURA_GLOWS = [
   '',
   'drop-shadow(0 0 8px #3a7fff) drop-shadow(0 0 16px #1a3aaa)',
   'drop-shadow(0 0 12px #ff6600) drop-shadow(0 0 24px #cc3300)',
-  'drop-shadow(0 0 18px #FFD600) drop-shadow(0 0 36px #ff8800)',
   'drop-shadow(0 0 28px #ff00ff) drop-shadow(0 0 56px #8800ff) drop-shadow(0 0 8px #fff)',
 ];
 
@@ -2731,7 +2730,7 @@ function _tickPlayerAura(timer) {
 
   const colors   = _AURA_COLORS[level];
   // Spawn rate: level 1 = every 4 frames, 2 = every 2, 3 = every frame, 4 = 2 per frame
-  const perFrame = level >= 4 ? 2 : 1;
+  const perFrame = level >= 3 ? 2 : 1;
   const every    = level >= 3 ? 1 : level >= 2 ? 2 : 4;
 
   if (timer % every === 0) {
