@@ -1260,7 +1260,15 @@ function displayQuestion(q, topic) {
     <button class="next-btn" id="nextBtn" onclick="afterQuestion()">Next Question →</button>
   `;
   gameState._options = q.options;
-  _questionReadyAt = Date.now(); // guard against phantom clicks on freshly rendered buttons
+  _questionReadyAt = Date.now();
+
+  // Hard-block all option buttons for 600ms using pointer-events:none.
+  // This is more reliable than the timestamp check alone — it stops phantom
+  // clicks at the browser level regardless of input method (mouse, touch, stylus).
+  const optBtns = qz.querySelectorAll('.opt-btn');
+  optBtns.forEach(b => { b.style.pointerEvents = 'none'; });
+  setTimeout(() => { optBtns.forEach(b => { b.style.pointerEvents = ''; }); }, 600);
+
   if (finisherReady) _markQuestionAsFinisher(qz);
 }
 
@@ -1498,8 +1506,8 @@ function renderGrid(v) {
 }
 
 function submitAnswer(idx) {
-  // Block phantom clicks that land on freshly rendered buttons (< 300ms after render)
-  if (Date.now() - _questionReadyAt < 300) return;
+  // Block phantom clicks — buttons are also pointer-events:none for 600ms after render
+  if (Date.now() - _questionReadyAt < 600) return;
   const gs = gameState;
   const q = gs._currentQ;
   const topic = gs._currentTopic;
