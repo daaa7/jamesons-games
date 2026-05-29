@@ -383,9 +383,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
      Declaring audio elements directly in HTML is more reliable on file:// than
      new Audio() — browser starts preloading on page load and the gesture
      unlock is more consistent. -->
-<audio id="audio-bgIntro" src="sounds/music-intro.mp3" preload="auto" loop></audio>
-<audio id="audio-bgFight" src="sounds/music-fight.mp3" preload="auto" loop></audio>
-<audio id="audio-bgResults" src="sounds/music-results.mp3" preload="auto" loop></audio>
+<audio id="audio-bgIntro" preload="auto" loop>
+  <source src="sounds/music-intro.mp3" type="audio/mpeg">
+  <source src="sounds/music-intro.wav" type="audio/wav">
+</audio>
+<audio id="audio-bgFight" preload="auto" loop>
+  <source src="sounds/music-fight.mp3" type="audio/mpeg">
+  <source src="sounds/music-fight.wav" type="audio/wav">
+</audio>
+<audio id="audio-bgResults" preload="auto" loop>
+  <source src="sounds/music-results.mp3" type="audio/mpeg">
+  <source src="sounds/music-results.wav" type="audio/wav">
+</audio>
 
 <!-- ══ INTRO SCREEN ══ -->
 <div id="screen-intro" class="screen active">
@@ -1527,8 +1536,8 @@ function submitAnswer(idx) {
         if (streakAtHit >= 2) sfxCombo(streakAtHit); else sfxHit();
         showHit(streakAtHit);
         updateHpBars();
-        // On fatality streaks the animation takes ~2.4s — delay next button until after new enemy lands
-        const nextDelay = (streakAtHit === 3 || streakAtHit === 5 || streakAtHit === 10) ? 2400 : 440;
+        // Fatality: wait for animation (2600ms) + new enemy entrance (600ms) before showing next button
+        const nextDelay = (streakAtHit === 3 || streakAtHit === 5 || streakAtHit === 10) ? 3300 : 440;
         setTimeout(() => { document.getElementById('nextBtn').classList.add('show'); }, nextDelay);
       });
     } else {
@@ -2780,17 +2789,9 @@ function triggerThreeAction(action) { /* deprecated */ }
 
 // ── STREAK FATALITY — fires on 3x / 5x / 10x combo ──────────────────────────
 function _streakFatality(streak) {
-  // Pick finisher type by streak level
   const type = streak >= 10 ? 'spineRip' : streak >= 5 ? 'uppercut' : 'punchOff';
-
-  // Play finisher + blood splatter
-  _spawnBloodSplatter();
-  _playFinisherAnim(type);   // handles FATALITY text + speech
-
-  // After the animation settles, swap in a fresh enemy
-  setTimeout(() => {
-    _swapEnemy();
-  }, 1800);
+  // Pass _swapEnemy as the callback — game continues with a fresh enemy after the animation
+  _playFinisherAnim(type, _swapEnemy);
 }
 
 function _swapEnemy() {
@@ -3153,6 +3154,7 @@ const MP3 = {
 
   // ── ANNOUNCER VOICE ──
   // If these exist they override the browser TTS voice
+  fatality:          'sounds/fatality.mp3',               // Fatality sound effect
   announceMassive:   'sounds/voice-massive-combo.mp3',   // "MASSIVE COMBO!"
   announcePerfect:   'sounds/voice-perfect.mp3',          // "PERFECT!"
   announceUltra:     'sounds/voice-ultra-combo.mp3',      // "ULTRA COMBO!!!"
@@ -3937,7 +3939,7 @@ function triggerFinisher() {
   _playFinisherAnim(type);
 }
 
-function _playFinisherAnim(type) {
+function _playFinisherAnim(type, onComplete) {
   const overlay = document.getElementById('finisherOverlay');
   const fatText = document.getElementById('finFatality');
   overlay.classList.add('active');
@@ -3989,24 +3991,30 @@ function _playFinisherAnim(type) {
     if (eWrap) { eWrap.style.transition = ''; eWrap.style.transform = 'scaleX(-1)'; eWrap.style.opacity = ''; }
   }, 1300);
 
-  // FATALITY text
+  // FATALITY text + sound
   setTimeout(() => {
     fatText.className = 'fin-fatality show';
-    speakFatality();
+    // Play fatality.mp3 — fall back to speech synthesis if file not loaded yet
+    if (!playMp3('fatality', 1.0)) speakFatality();
   }, 400);
 
-  // Clean up
+  // Clean up and hand off
   setTimeout(() => {
     overlay.classList.remove('active');
     fatText.className = 'fin-fatality';
-    // Advance game
-    const gs = gameState;
-    gs.enemyHp = 0;
-    updateHpBars();
-    setTimeout(() => {
-      if (gs.isQuest) _questStageWon();
-      else endGame();
-    }, 300);
+    if (onComplete) {
+      // Streak fatality: caller handles what happens next (swap enemy, continue)
+      onComplete();
+    } else {
+      // HP-based finisher: end the fight
+      const gs = gameState;
+      gs.enemyHp = 0;
+      updateHpBars();
+      setTimeout(() => {
+        if (gs.isQuest) _questStageWon();
+        else endGame();
+      }, 300);
+    }
   }, 2600);
 }
 
