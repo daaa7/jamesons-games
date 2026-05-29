@@ -320,8 +320,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
 
 /* ── 2D COMIC CHARACTERS ── */
 #char-player-wrap,#char-enemy-wrap{position:absolute;bottom:8px;z-index:5;pointer-events:none;}
-#char-player-wrap{left:4%;}
-#char-enemy-wrap{right:4%;transform:scaleX(-1);}
+#char-player-wrap{left:22%;}
+#char-enemy-wrap{right:22%;transform:scaleX(-1);}
 @keyframes idle2d{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes punch2d{0%{transform:translateX(0) rotate(0)}30%{transform:translateX(18px) rotate(-4deg) scaleX(1.04)}55%{transform:translateX(10px) rotate(-1deg)}100%{transform:translateX(0) rotate(0) scaleX(1)}}
 @keyframes threehit2d{0%{transform:translateX(0)}18%{transform:translateX(14px) rotate(-3deg)}33%{transform:translateX(3px)}48%{transform:translateX(17px) rotate(-4deg)}63%{transform:translateX(3px)}78%{transform:translateX(22px) rotate(-6deg)}100%{transform:translateX(0) rotate(0)}}
@@ -1031,7 +1031,8 @@ function startFight() {
     buildProgressDots();
     finisherReady = false;
     showScreen('fight');
-    playBgMusic('bgFight', 0.35);
+    // Fight screen is intentionally silent — focus on the game
+    stopBgMusic();
     setTimeout(() => initThree(), 60);
     loadAnnouncerVoice();
     sfxFightStart();
@@ -1536,8 +1537,8 @@ function submitAnswer(idx) {
         if (streakAtHit >= 2) sfxCombo(streakAtHit); else sfxHit();
         showHit(streakAtHit);
         updateHpBars();
-        // Fatality: wait for animation (2600ms) + new enemy entrance (600ms) before showing next button
-        const nextDelay = (streakAtHit === 3 || streakAtHit === 5 || streakAtHit === 10) ? 3300 : 440;
+        // Fatality: wait for full animation (5000ms) + new enemy entrance (600ms)
+        const nextDelay = (streakAtHit === 3 || streakAtHit === 5 || streakAtHit === 10) ? 6000 : 440;
         setTimeout(() => { document.getElementById('nextBtn').classList.add('show'); }, nextDelay);
       });
     } else {
@@ -1565,7 +1566,7 @@ let glbPlayer = {
   clips:   {},     // { clipName: AnimationAction }
   active:  null,   // currently playing action
   dashState: null, // { fromX, toX, elapsed, duration, onComplete }
-  homeX:  -2.2,    // resting X position in world space
+  homeX:  -1.0,    // resting X position in world space
 };
 
 // Character IDs that have a matching GLB file on disk
@@ -3831,7 +3832,7 @@ function _beginQuestStage() {
   _showStageBanner(qs.currentStage, qs.enemies.length, isBoss);
 
   showScreen('fight');
-  playBgMusic('bgFight', isBoss ? 0.5 : 0.35);
+  stopBgMusic(); // fight screen is intentionally silent
   setTimeout(() => initThree(), 60);
   loadAnnouncerVoice();
   sfxFightStart();
@@ -3969,54 +3970,50 @@ function _playFinisherAnim(type, onComplete) {
     const ey = eRect.top - aRect.top;
 
     if (type === 'punchOff') {
-      // Enemy slides off screen to the right
-      eWrap.style.transition = 'transform 0.8s ease-in';
-      eWrap.style.transform = 'scaleX(-1) translateX(-120vw) rotate(20deg)';
+      // Enemy slides off screen — slow dramatic punch
+      eWrap.style.transition = 'transform 2.2s ease-in';
+      eWrap.style.transform = 'scaleX(-1) translateX(-130vw) rotate(25deg)';
     } else if (type === 'uppercut') {
-      // Split: head floats up, body stays
+      // Head flies up slowly, body stays
       const enemyEl = document.getElementById('char-enemy');
       const svg = enemyEl ? enemyEl.querySelector('svg') : null;
       if (svg) {
-        // Create two overlapping clips for head vs body
         const headDiv = document.createElement('div');
-        headDiv.style.cssText = `position:absolute;bottom:${aRect.height - ey - eRect.height * 0.45}px;right:4%;overflow:hidden;height:45%;width:${eRect.width}px;pointer-events:none;`;
+        headDiv.style.cssText = `position:absolute;bottom:${aRect.height - ey - eRect.height * 0.45}px;right:22%;overflow:hidden;height:45%;width:${eRect.width}px;pointer-events:none;`;
         headDiv.innerHTML = svg.outerHTML;
-        headDiv.style.animation = 'finHeadUp 0.9s ease-in 0.2s forwards';
+        headDiv.style.animation = 'finHeadUp 2.4s ease-in 0.2s forwards';
         arena.appendChild(headDiv);
         eWrap.style.opacity = '0.3';
-        setTimeout(() => { headDiv.remove(); eWrap.style.opacity = ''; }, 1200);
+        setTimeout(() => { headDiv.remove(); eWrap.style.opacity = ''; }, 3500);
       } else {
-        eWrap.style.transition = 'transform 0.8s ease-in';
-        eWrap.style.transform = 'scaleX(-1) translateY(-120vh) rotate(-30deg)';
+        eWrap.style.transition = 'transform 2.2s ease-in';
+        eWrap.style.transform = 'scaleX(-1) translateY(-130vh) rotate(-30deg)';
       }
     } else {
-      // Spine rip: enemy spins and flies off
-      eWrap.style.transition = 'transform 1s ease-in';
-      eWrap.style.transform = 'scaleX(-1) translateY(-100vh) rotate(90deg)';
+      // Spine rip: slow spin off screen
+      eWrap.style.transition = 'transform 2.4s ease-in';
+      eWrap.style.transform = 'scaleX(-1) translateY(-110vh) rotate(90deg)';
     }
   }
 
-  // Reset enemy after animation
+  // Reset enemy wrapper after animation fully settles
   setTimeout(() => {
     if (eWrap) { eWrap.style.transition = ''; eWrap.style.transform = 'scaleX(-1)'; eWrap.style.opacity = ''; }
-  }, 1300);
+  }, 3800);
 
-  // FATALITY text + sound
+  // FATALITY text + sound — show once the animation is underway
   setTimeout(() => {
     fatText.className = 'fin-fatality show';
-    // Play fatality.mp3 — fall back to speech synthesis if file not loaded yet
     playMp3('fatality', 1.0);
-  }, 400);
+  }, 600);
 
-  // Clean up and hand off
+  // Clean up and hand off — give plenty of time to enjoy the animation
   setTimeout(() => {
     overlay.classList.remove('active');
     fatText.className = 'fin-fatality';
     if (onComplete) {
-      // Streak fatality: caller handles what happens next (swap enemy, continue)
       onComplete();
     } else {
-      // HP-based finisher: end the fight
       const gs = gameState;
       gs.enemyHp = 0;
       updateHpBars();
@@ -4025,7 +4022,7 @@ function _playFinisherAnim(type, onComplete) {
         else endGame();
       }, 300);
     }
-  }, 2600);
+  }, 5000);
 }
 
 function _spawnBloodSplatter() {
