@@ -187,11 +187,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
 #screen-intro{
   align-items:center;justify-content:center;
   position:fixed;inset:0;z-index:9999;
-  background:#000 url('splash-bg.jpg') center/cover no-repeat;overflow:hidden;
+  background:#000;overflow:hidden;
   min-height:unset;
 }
-/* Dark overlay behind the Three.js canvas so particle FX still pops */
-#screen-intro::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.5);z-index:0;pointer-events:none;}
 #introCanvas{position:absolute;inset:0;width:100%;height:100%;}
 .intro-content{
   position:relative;z-index:10;
@@ -3651,12 +3649,20 @@ let introW = 0, introH = 0;
 let introTime = 0;
 let introDone = false;
 
+let _splashImg = null; // preloaded splash-bg.jpg drawn onto the canvas each frame
+
 function startIntro() {
   const canvas = document.getElementById('introCanvas');
   if (!canvas) return;
   introCtx2d = canvas.getContext('2d');
   introW = canvas.width = window.innerWidth;
   introH = canvas.height = window.innerHeight;
+
+  // Pre-load the splash background so it can be drawn onto the canvas each frame
+  const img = new Image();
+  img.onload = () => { _splashImg = img; };
+  img.onerror = () => { _splashImg = null; }; // silently falls back to dark
+  img.src = 'splash-bg.jpg';
 
   window.addEventListener('resize', () => {
     introW = canvas.width = window.innerWidth;
@@ -3770,8 +3776,14 @@ function introLoop() {
   introTime++;
   const ctx = introCtx2d;
 
-  // Dark fade trail
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  // Draw splash background image (or solid black fallback) then darken for depth
+  ctx.clearRect(0, 0, introW, introH);
+  if (_splashImg) {
+    ctx.drawImage(_splashImg, 0, 0, introW, introH);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; // dim so particles pop
+  } else {
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+  }
   ctx.fillRect(0, 0, introW, introH);
 
   // Background star field
