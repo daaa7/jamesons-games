@@ -1356,85 +1356,116 @@ function renderVisual(v) {
 function renderBarGraph(v) {
   const labels = v.labels || [];
   const values = v.values || [];
-  const unit = v.unit || '';
+  const unit  = v.unit  || '';
   const title = v.title || '';
-  const max = Math.max(...values, 10);
-  const roundedMax = Math.ceil(max / 10) * 10;
-  const W = 340, H = 180, padL = 40, padB = 36, padT = 28, padR = 12;
+  const n = labels.length || 1;
+
+  // Scale max to a nice round number
+  const rawMax = Math.max(...values, 10);
+  const step   = rawMax <= 20 ? 2 : rawMax <= 50 ? 5 : rawMax <= 100 ? 10 : rawMax <= 200 ? 20 : 50;
+  const roundedMax = Math.ceil(rawMax / step) * step;
+
+  // Canvas — tall enough to breathe, wide enough for labels
+  const W = 520, padL = 52, padR = 16, padT = 36;
+  // Bottom padding grows when labels are long so they don't get clipped
+  const maxLabelLen = Math.max(...labels.map(l => String(l).length));
+  const padB = maxLabelLen > 8 ? 70 : 52;
+  const H = 280 + (padB - 52); // total height
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
-  const barW = Math.min(36, (chartW / labels.length) * 0.6);
-  const gap = chartW / labels.length;
-  const colors = ['#1565C0','#E53935','#2E7D32','#F57F17','#6A1B9A','#00838F'];
 
-  // Y axis ticks
+  const gap  = chartW / n;
+  const barW = Math.max(20, Math.min(56, gap * 0.62));
+  const colors = ['#2979FF','#E53935','#00C853','#FF6D00','#AA00FF','#00B8D4','#FFD600','#F06292'];
+
+  // Y-axis grid + labels
   const yTicks = 5;
-  let yLines = '';
-  let yLabels = '';
+  let yLines = '', yLabels = '';
   for (let i = 0; i <= yTicks; i++) {
     const val = Math.round((roundedMax / yTicks) * i);
-    const y = padT + chartH - (val / roundedMax) * chartH;
-    yLines += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#2e2e4e" stroke-width="0.5"/>`;
-    yLabels += `<text x="${padL - 4}" y="${y + 4}" text-anchor="end" font-size="9" fill="#888aaa">${val}</text>`;
+    const y   = padT + chartH - (val / roundedMax) * chartH;
+    yLines  += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#2e2e4e" stroke-width="1"/>`;
+    yLabels += `<text x="${padL-6}" y="${y+5}" text-anchor="end" font-size="12" font-weight="600" fill="#c0c0d8">${val}</text>`;
   }
 
-  // Bars
+  // Bars + value labels + x-axis labels
   let bars = '';
   labels.forEach((lbl, i) => {
-    const x = padL + gap * i + gap / 2 - barW / 2;
-    const barH = (values[i] / roundedMax) * chartH;
-    const y = padT + chartH - barH;
-    const col = colors[i % colors.length];
-    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${col}" rx="2"/>`;
-    bars += `<text x="${x + barW/2}" y="${y - 3}" text-anchor="middle" font-size="9" fill="#f0f0ff" font-weight="700">${values[i]}</text>`;
-    bars += `<text x="${padL + gap * i + gap/2}" y="${H - padB + 14}" text-anchor="middle" font-size="9" fill="#888aaa">${lbl}</text>`;
+    const cx   = padL + gap * i + gap / 2;
+    const bx   = cx - barW / 2;
+    const barH = Math.max(2, (values[i] / roundedMax) * chartH);
+    const by   = padT + chartH - barH;
+    const col  = colors[i % colors.length];
+
+    // Bar body
+    bars += `<rect x="${bx}" y="${by}" width="${barW}" height="${barH}" fill="${col}" rx="3" opacity="0.92"/>`;
+    // Value label above bar
+    bars += `<text x="${cx}" y="${by - 6}" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">${values[i]}</text>`;
+
+    // X-axis label — rotate if long so it doesn't overlap
+    const rotate = maxLabelLen > 8;
+    if (rotate) {
+      bars += `<text x="${cx}" y="${padT+chartH+16}" text-anchor="end" font-size="12" fill="#d0d0e8" font-weight="600"
+        transform="rotate(-38,${cx},${padT+chartH+16})">${lbl}</text>`;
+    } else {
+      bars += `<text x="${cx}" y="${padT+chartH+18}" text-anchor="middle" font-size="13" fill="#d0d0e8" font-weight="600">${lbl}</text>`;
+    }
   });
 
-  // Unit label on y axis
-  const unitLabel = unit ? `<text x="8" y="${padT + chartH/2}" text-anchor="middle" font-size="9" fill="#888aaa" transform="rotate(-90,8,${padT + chartH/2})">${unit}</text>` : '';
+  // Y-axis unit label (rotated)
+  const unitLabel = unit
+    ? `<text x="14" y="${padT+chartH/2}" text-anchor="middle" font-size="11" fill="#a0a0c0"
+        transform="rotate(-90,14,${padT+chartH/2})">${unit}</text>`
+    : '';
 
-  return `<div style="margin:0.5rem 0;background:#0d0d18;border:1px solid #2e2e4e;border-radius:10px;padding:0.5rem;overflow:hidden;">
-    <div style="font-size:0.72rem;font-weight:700;color:#888aaa;text-align:center;margin-bottom:4px;">${title}</div>
-    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block;margin:0 auto;">
+  return `<div style="margin:0.6rem 0;background:#0a0a1a;border:2px solid #2a2a4a;border-radius:12px;padding:0.6rem 0.4rem 0.4rem;">
+    ${title ? `<div style="font-size:0.85rem;font-weight:700;color:#d0d0f0;text-align:center;margin-bottom:6px;letter-spacing:0.5px;">${title}</div>` : ''}
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin:0 auto;">
       ${yLines}${yLabels}${unitLabel}${bars}
-      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="#888aaa" stroke-width="1"/>
-      <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="#888aaa" stroke-width="1"/>
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="#8888aa" stroke-width="1.5"/>
+      <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="#8888aa" stroke-width="1.5"/>
     </svg>
   </div>`;
 }
 
 function renderNumberLine(v) {
-  const min = v.min ?? 0;
-  const max = v.max ?? 3;
-  const ticks = v.ticks ?? 8;
+  const min     = v.min ?? 0;
+  const max     = v.max ?? 3;
+  const ticks   = v.ticks ?? 8;
   const markers = v.markers || [];
-  const W = 340, H = 60, padX = 24;
-  const lineY = 35;
-  const span = max - min;
+  const W = 480, H = 100, padX = 36;
+  const lineY = 58; // line sits lower, giving room for labels above AND below
+  const span  = max - min;
 
-  // Tick marks
+  // Tick marks and whole-number labels
   let ticksHtml = '';
   for (let i = 0; i <= ticks; i++) {
-    const val = min + (span / ticks) * i;
-    const x = padX + (val - min) / span * (W - 2*padX);
-    const isWhole = Math.abs(val - Math.round(val)) < 0.01;
-    ticksHtml += `<line x1="${x}" y1="${lineY - (isWhole?12:7)}" x2="${x}" y2="${lineY}" stroke="#888aaa" stroke-width="${isWhole?1.5:0.8}"/>`;
-    if (isWhole) ticksHtml += `<text x="${x}" y="${lineY+14}" text-anchor="middle" font-size="11" fill="#f0f0ff">${Math.round(val)}</text>`;
+    const val     = min + (span / ticks) * i;
+    const x       = padX + (val - min) / span * (W - 2 * padX);
+    const isWhole = Math.abs(val - Math.round(val)) < 0.001;
+    const tickH   = isWhole ? 16 : 9;
+    ticksHtml += `<line x1="${x}" y1="${lineY - tickH}" x2="${x}" y2="${lineY + 4}"
+      stroke="${isWhole ? '#c0c0e0' : '#666680'}" stroke-width="${isWhole ? 2 : 1}"/>`;
+    if (isWhole) {
+      ticksHtml += `<text x="${x}" y="${lineY + 20}" text-anchor="middle"
+        font-size="14" font-weight="700" fill="#e0e0ff">${Math.round(val)}</text>`;
+    }
   }
 
-  // Markers (points on the line)
+  // Marker dots + labels above the line
   let markersHtml = '';
   markers.forEach(m => {
-    const x = padX + (m.value - min) / span * (W - 2*padX);
-    markersHtml += `<circle cx="${x}" cy="${lineY}" r="5" fill="#FFD600"/>`;
-    markersHtml += `<text x="${x}" y="${lineY - 16}" text-anchor="middle" font-size="11" font-weight="700" fill="#FFD600">${m.label}</text>`;
+    const x = padX + (m.value - min) / span * (W - 2 * padX);
+    markersHtml += `<circle cx="${x}" cy="${lineY}" r="7" fill="#FFD600" stroke="#fff" stroke-width="1.5"/>`;
+    markersHtml += `<text x="${x}" y="${lineY - 22}" text-anchor="middle"
+      font-size="14" font-weight="700" fill="#FFD600">${m.label}</text>`;
   });
 
-  return `<div style="margin:0.5rem 0;background:#0d0d18;border:1px solid #2e2e4e;border-radius:10px;padding:0.25rem 0.5rem;overflow:hidden;">
-    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block;margin:0 auto;">
-      <line x1="${padX}" y1="${lineY}" x2="${W-padX}" y2="${lineY}" stroke="#888aaa" stroke-width="1.5"/>
-      <polygon points="${padX-8},${lineY} ${padX},${lineY-4} ${padX},${lineY+4}" fill="#888aaa"/>
-      <polygon points="${W-padX+8},${lineY} ${W-padX},${lineY-4} ${W-padX},${lineY+4}" fill="#888aaa"/>
+  return `<div style="margin:0.6rem 0;background:#0a0a1a;border:2px solid #2a2a4a;border-radius:12px;padding:0.5rem 0.6rem;">
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin:0 auto;">
+      <line x1="${padX}" y1="${lineY}" x2="${W-padX}" y2="${lineY}" stroke="#9090cc" stroke-width="2.5"/>
+      <polygon points="${padX-10},${lineY} ${padX},${lineY-5} ${padX},${lineY+5}" fill="#9090cc"/>
+      <polygon points="${W-padX+10},${lineY} ${W-padX},${lineY-5} ${W-padX},${lineY+5}" fill="#9090cc"/>
       ${ticksHtml}${markersHtml}
     </svg>
   </div>`;
