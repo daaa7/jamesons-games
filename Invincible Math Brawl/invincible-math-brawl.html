@@ -1034,6 +1034,7 @@ function startFight() {
     buildProgressDots();
     finisherReady = false;
     resetAura(); // clear any glow from a previous fight
+    applyRandomArena(); // pick a random arena background
     showScreen('fight');
     // Fight screen is intentionally silent — focus on the game
     stopBgMusic();
@@ -2003,14 +2004,14 @@ function initThree() {
   const H = canvas.clientHeight || 220;
 
   threeScene = new THREE.Scene();
-  threeScene.background = new THREE.Color(0x080814);
-  threeScene.fog = new THREE.Fog(0x080814, 12, 22);
+  threeScene.background = null; // transparent — CSS arena background shows through
+  threeScene.fog = new THREE.Fog(0x080814, 14, 24);
 
   threeCamera = new THREE.PerspectiveCamera(55, W/H, 0.1, 100);
   threeCamera.position.set(0, 2.2, 7);
   threeCamera.lookAt(0, 1.5, 0);
 
-  threeRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  threeRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   threeRenderer.setSize(W, H, false);
   threeRenderer.shadowMap.enabled = true;
 
@@ -2030,7 +2031,7 @@ function initThree() {
 
   // Floor
   const floorGeo = new THREE.PlaneGeometry(20, 20);
-  const floorMat = new THREE.MeshLambertMaterial({ color: 0x111122 });
+  const floorMat = new THREE.MeshLambertMaterial({ color: 0x080814, transparent: true, opacity: 0.55 });
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.rotation.x = -Math.PI/2;
   floor.receiveShadow = true;
@@ -4002,6 +4003,7 @@ function _beginQuestStage() {
   // Show stage banner in arena
   _showStageBanner(qs.currentStage, qs.enemies.length, isBoss);
 
+  applyRandomArena();
   showScreen('fight');
   stopBgMusic(); // fight screen is intentionally silent
   setTimeout(() => initThree(), 60);
@@ -4230,6 +4232,35 @@ function speakFatality(msg) {
 
 // ══ INIT ──
 
+
+// ── ARENA BACKGROUNDS ────────────────────────────────────────────────────────
+// Drop images named arena1.jpg … arena10.jpg in the arenas/ folder.
+// The game probes which ones exist and picks randomly each fight.
+const _arenaPool = [];
+
+(function probeArenas() {
+  for (let i = 1; i <= 10; i++) {
+    const src = `arenas/arena${i}.jpg`;
+    const img = new Image();
+    img.onload  = () => { _arenaPool.push(src); };
+    img.onerror = () => {};   // file missing — skip silently
+    img.src = src;
+  }
+})();
+
+function applyRandomArena() {
+  const box = document.getElementById('arenaBox');
+  if (!box) return;
+  if (_arenaPool.length === 0) {
+    // No arena images — use default dark background
+    box.style.backgroundImage = '';
+    return;
+  }
+  const src = _arenaPool[Math.floor(Math.random() * _arenaPool.length)];
+  box.style.backgroundImage  = `url('${src}')`;
+  box.style.backgroundSize   = 'cover';
+  box.style.backgroundPosition = 'center';
+}
 
 buildCharGrid();
 probeAllMp3s(); // check for MP3 files in background — synth plays in the meantime
