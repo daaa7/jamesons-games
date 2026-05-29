@@ -718,7 +718,7 @@ function confirmReset() {
 // ══ CONSTANTS ══
 const CHARACTERS = [
   {id:'mark',      name:'Mark Grayson',       alias:'INVINCIBLE',  emoji:'🦸', color:'#1565C0', power:'Viltrumite strength'},
-  {id:'omniman',   name:'Nolan Grayson',       alias:'OMNI-MAN',   emoji:'💪', color:'#C62828', power:'Viltrumite warlord'},
+  {id:'omniman',   name:'Nolan Grayson',       alias:'OMNI-MAN',   emoji:'💪', color:'#C62828', power:'Viltrumite warlord', sprite:'omni-1.png'},
   {id:'thragg',    name:'Grand Regent Thragg', alias:'THRAGG',     emoji:'👿', color:'#5c0090', power:'Viltrumite Emperor'},
   {id:'immortal',  name:'Immortal',            alias:'IMMORTAL',   emoji:'⚔️', color:'#B71C1C', power:'Cannot be killed'},
   {id:'martianman',name:'Martian Man',         alias:'MARTIAN MAN',emoji:'👽', color:'#1B5E20', power:'Martian shapeshifter'},
@@ -1794,25 +1794,44 @@ function initOmniSprite() {
 }
 
 function buildChar2D() {
-  const charId = gameState.char ? gameState.char.id : 'mark';
-  const enemyId = gameState.enemy ? (gameState.enemy.charId || 'omniman') : 'omniman';
+  const charId  = gameState.char   ? gameState.char.id                      : 'mark';
+  const enemyId = gameState.enemy  ? (gameState.enemy.charId || 'omniman')  : 'omniman';
 
-  // Always set SVG first so there's a fallback if GLB fails
-  const playerSVG = CHAR_SVGS[charId] || CHAR_SVGS.mark;
-  const enemySVGFinal = CHAR_SVGS[enemyId] || CHAR_SVGS.omniman;
-
-  const p = document.getElementById('char-player');
+  const p  = document.getElementById('char-player');
   const pw = document.getElementById('char-player-wrap');
+  const e  = document.getElementById('char-enemy');
+  const ew = document.getElementById('char-enemy-wrap');
+
+  // Clear any inline positioning left over from the GLB syncWrap or previous sessions.
+  // Without this, subsequent SVG characters appear at the wrong vertical position.
+  [pw, ew].forEach(w => {
+    if (!w) return;
+    w.style.top = ''; w.style.bottom = ''; w.style.left = ''; w.style.right = '';
+    w.style.position = ''; w.style.visibility = '';
+  });
+
+  // ── Player ────────────────────────────────────────────────────────────────
   if (playerSprite) { playerSprite.destroy(); playerSprite = null; }
-  if (p) { p.innerHTML = playerSVG; p.className = 'c2d-idle'; }
-  if (pw) pw.style.visibility = '';  // reset — loadPlayerGLB will hide if GLB succeeds
+  if (gameState.char && gameState.char.sprite) {
+    // Sprite-sheet character (Omni-Man)
+    const pCfg = Object.assign({}, OMNI_CFG, { src: gameState.char.sprite });
+    playerSprite = initSpriteChar('char-player', pCfg);
+    if (pw) pw.style.transform = ''; // faces right naturally, no flip
+  } else {
+    // SVG character — set immediately as fallback, then try GLB async
+    const playerSVG = CHAR_SVGS[charId] || CHAR_SVGS.mark;
+    if (p) { p.innerHTML = playerSVG; p.className = 'c2d-idle'; }
+    loadPlayerGLB(charId);
+  }
 
+  // ── Enemy ─────────────────────────────────────────────────────────────────
   if (omniSprite) { omniSprite.destroy(); omniSprite = null; }
-  const e = document.getElementById('char-enemy');
-  if (e) { e.innerHTML = enemySVGFinal; e.className = 'c2d-idle'; }
-
-  // Load GLB model for this character if one exists (runs async, hides SVG on success)
-  loadPlayerGLB(charId);
+  if (enemyId === 'omniman') {
+    initOmniSprite(); // sprite sheet for Omni-Man enemy
+  } else {
+    const enemySVG = CHAR_SVGS[enemyId] || CHAR_SVGS.omniman;
+    if (e) { e.innerHTML = enemySVG; e.className = 'c2d-idle'; }
+  }
 }
 
 // buildChar2D_LEGACY removed — buildChar2D above uses CHAR_SVGS lookup.
@@ -2671,14 +2690,11 @@ function threeAnimLoop() {
       const arena = document.getElementById('arenaBox');
       const wrap  = document.getElementById('char-player-wrap');
       if (arena && wrap) {
-        const aw = arena.clientWidth, ah = arena.clientHeight;
+        const aw = arena.clientWidth;
         const sx = ((v.x + 1) / 2) * aw;
-        const sy = ((1 - v.y) / 2) * ah;
-        wrap.style.position = 'absolute';
+        // Only sync horizontal — let CSS bottom:8px control vertical so characters
+        // never get pushed off-screen when another character is picked next fight
         wrap.style.left = sx + 'px';
-        wrap.style.top  = sy + 'px';
-        wrap.style.right = 'auto';
-        wrap.style.bottom = 'auto';
       }
     }
   }
