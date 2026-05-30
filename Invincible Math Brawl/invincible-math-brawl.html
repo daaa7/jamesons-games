@@ -349,6 +349,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
 .arena-card:hover{border-color:var(--yellow);transform:translateY(-2px);box-shadow:0 4px 12px #0008;}
 .arena-card.selected{border-color:var(--yellow);box-shadow:0 0 18px #FFD60066;}
 .arena-card-label{font-family:'Bangers',cursive;font-size:0.72rem;letter-spacing:1px;background:rgba(0,0,0,0.72);color:#fff;padding:2px 6px;width:100%;text-align:center;}
+.arena-fx-badge{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.72);border:1px solid rgba(255,255,255,0.18);border-radius:4px;font-size:0.6rem;padding:1px 5px;cursor:pointer;color:rgba(255,255,255,0.55);z-index:2;user-select:none;font-family:'Bangers',cursive;letter-spacing:1px;transition:all 0.12s;}
+.arena-fx-badge:hover{border-color:var(--yellow);color:var(--yellow);}
+.arena-fx-badge.has-fx{border-color:var(--yellow);color:var(--yellow);}
 
 /* ── QUEST MODE ── */
 #screen-quest,#screen-stageclear{align-items:center;justify-content:center;z-index:1;padding:2rem;gap:1.2rem;}
@@ -579,6 +582,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
   <!-- THREE.JS FIGHTER ARENA -->
   <div id="arenaBox" style="position:relative;width:100%;height:340px;overflow:hidden;border-top:2px solid var(--border);border-bottom:2px solid var(--border);">
     <canvas id="threeCanvas" style="width:100%;height:100%;display:block;"></canvas>
+    <!-- Visual FX overlay (lightning, rain, etc.) — drawn above characters, pointer-events:none -->
+    <canvas id="arenaFXCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></canvas>
     <!-- 2D comic characters -->
     <div id="char-player-wrap"><div id="char-player" class="c2d-idle"></div></div>
     <div id="char-enemy-wrap"><div id="char-enemy" class="c2d-idle"></div></div>
@@ -653,6 +658,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:radial
         <option value="standard">Standard</option>
         <option value="hard">Hard</option>
       </select>
+    </div>
+    <!-- Arena select for quest — hidden until arenas are probed -->
+    <div id="arenaSelectSectionQuest" style="display:none;">
+      <p style="font-family:'Bangers',cursive;font-size:1rem;letter-spacing:3px;color:var(--yellow);margin-bottom:0;">SELECT ARENA</p>
+      <div class="arena-grid" id="arenaGridQuest"></div>
     </div>
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;justify-content:center;">
       <button class="btn-secondary" onclick="showScreen('title')">← Back</button>
@@ -3280,6 +3290,7 @@ function playAgain(newChar) {
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
+  if (name !== 'fight') stopArenaEffect();
   if (name==='camp') { buildCampDashboard(); stopBgMusic(); }
   if (name==='quest') { buildQuestCharGrid(); selectedChar = null; document.getElementById('questStartBtn').disabled = true; }
   if (name==='results') { playBgMusic('bgResults', 0.4); }
@@ -4004,7 +4015,7 @@ function _beginQuestStage() {
   // Show stage banner in arena
   _showStageBanner(qs.currentStage, qs.enemies.length, isBoss);
 
-  applyRandomArena();
+  applyQuestArena(); // randomize arena from quest-arenas/ pool (falls back to arenas/)
   showScreen('fight');
   stopBgMusic(); // fight screen is intentionally silent
   setTimeout(() => initThree(), 60);
@@ -4235,9 +4246,11 @@ function speakFatality(msg) {
 
 
 // ── ARENA BACKGROUNDS ────────────────────────────────────────────────────────
-// Drop images named arena1.jpg … arena10.jpg in the arenas/ folder.
-// Probe on load, build a chooser on the title screen, use selection in fights.
+// Regular arenas: drop arena1.jpg … arena10.jpg in the arenas/ folder.
+// Quest arenas:   drop 1.jpg … 10.jpg in the quest-arenas/ folder.
+//   Quest fights draw from quest-arenas/ when images exist, otherwise fall back to arenas/.
 const _arenaPool = [];
+const _questBgPool = [];
 let _selectedArena = null; // null = random each fight
 
 (function probeArenas() {
@@ -4256,31 +4269,244 @@ let _selectedArena = null; // null = random each fight
   }
 })();
 
+// Probe quest-arenas/1.jpg … quest-arenas/10.jpg for quest-specific backgrounds.
+(function probeQuestArenas() {
+  for (let i = 1; i <= 10; i++) {
+    const src = `quest-arenas/${i}.jpg`;
+    const img = new Image();
+    img.onload = () => { _questBgPool.push(src); };
+    img.onerror = () => {};
+    img.src = src;
+  }
+})();
+
+// ── ARENA VISUAL EFFECTS ─────────────────────────────────────────────────────
+// Each arena can have one effect assigned via the badge on its card.
+// Place images in arenas/ or quest-arenas/ and cycle the badge to assign an effect.
+const _arenaEffects = {};
+const EFFECT_LIST   = [null, 'lightning', 'particles', 'rain', 'fog', 'equations', 'sparks'];
+const EFFECT_LABELS = { null: '+FX', lightning: '⚡', particles: '✦', rain: '🌧', fog: '🌫', equations: '∑', sparks: '✸' };
+
+let _fxRaf    = null;
+let _fxActive = null;
+let _fxParts  = [];
+
+function stopArenaEffect() {
+  if (_fxRaf) { cancelAnimationFrame(_fxRaf); _fxRaf = null; }
+  _fxActive = null;
+  const c = document.getElementById('arenaFXCanvas');
+  if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+}
+
+function startArenaEffect(effect) {
+  stopArenaEffect();
+  if (!effect) return;
+  const c = document.getElementById('arenaFXCanvas');
+  if (!c) return;
+
+  // Sync canvas resolution to its CSS size
+  const rect = c.getBoundingClientRect();
+  c.width  = rect.width  || 600;
+  c.height = rect.height || 340;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  _fxActive = effect;
+  _fxParts  = [];
+
+  // ── initialise particle pools ────────────────────────────────────────────
+  if (effect === 'particles') {
+    for (let i = 0; i < 50; i++)
+      _fxParts.push({ x: Math.random()*W, y: Math.random()*H,
+        r: 1+Math.random()*2.5, dy: -(0.3+Math.random()*0.6),
+        dx: (Math.random()-.5)*0.3, life: Math.random() });
+  }
+  if (effect === 'rain') {
+    for (let i = 0; i < 90; i++)
+      _fxParts.push({ x: Math.random()*W, y: Math.random()*H,
+        len: 8+Math.random()*10, spd: 7+Math.random()*5 });
+  }
+  if (effect === 'fog') {
+    for (let i = 0; i < 6; i++)
+      _fxParts.push({ x: (Math.random()-.2)*W*1.4, y: Math.random()*H,
+        w: 220+Math.random()*280, h: 70+Math.random()*100,
+        a: 0.04+Math.random()*0.07,
+        dx: (Math.random()>.5?1:-1)*(0.15+Math.random()*0.35) });
+  }
+  if (effect === 'equations') {
+    const syms = ['x²','∑','π','∫','√','±','∞','2+2','3×4','÷','≠','≤','θ','λ','Δ','n!'];
+    for (let i = 0; i < 16; i++)
+      _fxParts.push({ x: Math.random()*W, y: Math.random()*H,
+        sym: syms[i % syms.length], a: Math.random()*.6,
+        dy: -(0.18+Math.random()*0.35), size: 13+Math.random()*14,
+        da: (Math.random()-.5)*.005 });
+  }
+
+  // ── lightning state ──────────────────────────────────────────────────────
+  let ltFlash = 0, ltBolt = null, ltTimer = 80+Math.random()*120;
+
+  function tick() {
+    if (_fxActive !== effect) return;
+    ctx.clearRect(0, 0, W, H);
+
+    // ── LIGHTNING ──
+    if (effect === 'lightning') {
+      ltTimer--;
+      if (ltTimer <= 0) {
+        ltFlash = 10; ltBolt = _makeLtBolt(W, H);
+        ltTimer = 100+Math.random()*200;
+      }
+      if (ltFlash > 0) {
+        ctx.fillStyle = `rgba(190,210,255,${ltFlash/55})`;
+        ctx.fillRect(0, 0, W, H);
+        if (ltBolt && ltFlash > 3) {
+          ctx.save();
+          ctx.strokeStyle = `rgba(230,245,255,${ltFlash/10})`;
+          ctx.lineWidth = 1.5; ctx.shadowColor='#ccf'; ctx.shadowBlur=16;
+          ctx.beginPath();
+          ltBolt.forEach((p,i)=> i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
+          ctx.stroke();
+          ctx.restore();
+        }
+        ltFlash--;
+      }
+    }
+
+    // ── PARTICLES ──
+    else if (effect === 'particles') {
+      _fxParts.forEach(p => {
+        p.y += p.dy; p.x += p.dx; p.life += 0.009;
+        if (p.y < -5) { p.y = H+5; p.x = Math.random()*W; p.life=0; }
+        const a = Math.sin(p.life*Math.PI)*0.75;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,225,90,${a})`; ctx.fill();
+      });
+    }
+
+    // ── RAIN ──
+    else if (effect === 'rain') {
+      ctx.strokeStyle = 'rgba(180,215,255,0.40)'; ctx.lineWidth = 1;
+      _fxParts.forEach(p => {
+        p.x += p.spd*.22; p.y += p.spd;
+        if (p.y > H) { p.y = -15; p.x = Math.random()*W; }
+        ctx.beginPath(); ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x+p.len*.22, p.y+p.len); ctx.stroke();
+      });
+    }
+
+    // ── FOG ──
+    else if (effect === 'fog') {
+      _fxParts.forEach(p => {
+        p.x += p.dx;
+        if (p.x > W+250) p.x = -300;
+        if (p.x < -300)  p.x = W+250;
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.w/2);
+        g.addColorStop(0, `rgba(210,210,220,${p.a})`);
+        g.addColorStop(1, 'rgba(210,210,220,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.w/2, p.h/2, 0, 0, Math.PI*2);
+        ctx.fill();
+      });
+    }
+
+    // ── EQUATIONS ──
+    else if (effect === 'equations') {
+      _fxParts.forEach(p => {
+        p.y += p.dy; p.a += p.da;
+        if (p.a > 0.65) p.da = -Math.abs(p.da);
+        if (p.a < 0.04) p.da =  Math.abs(p.da);
+        if (p.y < -30) { p.y = H+10; p.x = Math.random()*W; }
+        ctx.globalAlpha = p.a;
+        ctx.fillStyle = '#ffe066';
+        ctx.font = `bold ${p.size}px 'Bangers', monospace`;
+        ctx.fillText(p.sym, p.x, p.y);
+        ctx.globalAlpha = 1;
+      });
+    }
+
+    // ── SPARKS ──
+    else if (effect === 'sparks') {
+      if (Math.random() < 0.18) {
+        const bx = W*.15 + Math.random()*W*.7;
+        const by = H*.25 + Math.random()*H*.5;
+        for (let i = 0; i < 7; i++) {
+          const ang = Math.random()*Math.PI*2, spd = 1.2+Math.random()*3;
+          _fxParts.push({ x:bx, y:by, vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd-1.2, life:1 });
+        }
+      }
+      ctx.lineWidth = 1.5;
+      _fxParts = _fxParts.filter(p => {
+        p.x+=p.vx; p.y+=p.vy; p.vy+=0.09; p.life-=0.045;
+        if (p.life<=0) return false;
+        const h = 25+Math.random()*25;
+        ctx.strokeStyle = `hsla(${h},100%,68%,${p.life})`;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x-p.vx*3, p.y-p.vy*3); ctx.stroke();
+        return true;
+      });
+    }
+
+    _fxRaf = requestAnimationFrame(tick);
+  }
+
+  _fxRaf = requestAnimationFrame(tick);
+}
+
+function _makeLtBolt(W, H) {
+  const pts = [{ x: W*.25+Math.random()*W*.5, y: 0 }];
+  let cx = pts[0].x, cy = 0;
+  while (cy < H) { cx += (Math.random()-.5)*44; cy += 22+Math.random()*28;
+    pts.push({ x: Math.max(10, Math.min(W-10, cx)), y: cy }); }
+  return pts;
+}
+
 function _buildArenaSelect() {
-  const section = document.getElementById('arenaSelectSection');
-  const grid    = document.getElementById('arenaGrid');
-  if (!section || !grid || _arenaPool.length === 0) return;
-  section.style.display = '';
+  const targets = [
+    { section: document.getElementById('arenaSelectSection'),      grid: document.getElementById('arenaGrid') },
+    { section: document.getElementById('arenaSelectSectionQuest'), grid: document.getElementById('arenaGridQuest') },
+  ];
 
-  grid.innerHTML = '';
+  targets.forEach(({ section, grid }) => {
+    if (!section || !grid || _arenaPool.length === 0) return;
+    section.style.display = '';
+    grid.innerHTML = '';
 
-  // Random card
-  const rnd = document.createElement('div');
-  rnd.className = 'arena-card' + (_selectedArena === null ? ' selected' : '');
-  rnd.title = 'Pick a random arena each fight';
-  rnd.innerHTML = `<div class="arena-card-label">🎲 RANDOM</div>`;
-  rnd.onclick = () => selectArena(null);
-  grid.appendChild(rnd);
+    // Random card
+    const rnd = document.createElement('div');
+    rnd.className = 'arena-card' + (_selectedArena === null ? ' selected' : '');
+    rnd.title = 'Pick a random arena each fight';
+    rnd.innerHTML = `<div class="arena-card-label">🎲 RANDOM</div>`;
+    rnd.onclick = () => selectArena(null);
+    grid.appendChild(rnd);
 
-  // One card per arena image
-  _arenaPool.forEach((src, i) => {
-    const card = document.createElement('div');
-    card.className = 'arena-card' + (_selectedArena === src ? ' selected' : '');
-    card.style.backgroundImage = `url('${src}')`;
-    card.title = `Arena ${i + 1}`;
-    card.innerHTML = `<div class="arena-card-label">ARENA ${i + 1}</div>`;
-    card.onclick = () => selectArena(src);
-    grid.appendChild(card);
+    // One card per arena image
+    _arenaPool.forEach((src, i) => {
+      const card = document.createElement('div');
+      card.className = 'arena-card' + (_selectedArena === src ? ' selected' : '');
+      card.style.backgroundImage = `url('${src}')`;
+      card.title = `Arena ${i + 1}`;
+      card.innerHTML = `<div class="arena-card-label">ARENA ${i + 1}</div>`;
+      card.onclick = () => selectArena(src);
+
+      // FX badge — click to cycle effect for this arena
+      const fx = _arenaEffects[src] || null;
+      const badge = document.createElement('div');
+      badge.className = 'arena-fx-badge' + (fx ? ' has-fx' : '');
+      badge.title = 'Click to cycle visual effect';
+      badge.textContent = EFFECT_LABELS[fx] || '+FX';
+      badge.onclick = e => {
+        e.stopPropagation();
+        const idx = EFFECT_LIST.indexOf(_arenaEffects[src] !== undefined ? _arenaEffects[src] : null);
+        _arenaEffects[src] = EFFECT_LIST[(idx + 1) % EFFECT_LIST.length];
+        _buildArenaSelect();
+        // Preview effect if this arena is currently active
+        if (_selectedArena === src || (_selectedArena === null)) startArenaEffect(_arenaEffects[src]);
+      };
+      card.appendChild(badge);
+
+      grid.appendChild(card);
+    });
   });
 }
 
@@ -4289,17 +4515,31 @@ function selectArena(src) {
   _buildArenaSelect(); // re-render to update selected highlight
 }
 
-function applyRandomArena() {
+
+// Used by quest mode: picks a random image from quest-arenas/ if any exist, else falls back to arenas/.
+function applyQuestArena() {
   const box = document.getElementById('arenaBox');
   if (!box) return;
-  if (_arenaPool.length === 0) { box.style.backgroundImage = ''; return; }
+  const pool = _questBgPool.length > 0 ? _questBgPool : _arenaPool;
+  if (pool.length === 0) { box.style.backgroundImage = ''; stopArenaEffect(); return; }
+  const src = pool[Math.floor(Math.random() * pool.length)];
+  box.style.backgroundImage = `url('${src}')`;
+  box.style.backgroundSize  = '100% 100%';
+  startArenaEffect(_arenaEffects[src] || null);
+}
 
-  const src = _selectedArena !== null
+function applyRandomArena(forceRandom = false) {
+  const box = document.getElementById('arenaBox');
+  if (!box) return;
+  if (_arenaPool.length === 0) { box.style.backgroundImage = ''; stopArenaEffect(); return; }
+
+  const src = (!forceRandom && _selectedArena !== null)
     ? _selectedArena
     : _arenaPool[Math.floor(Math.random() * _arenaPool.length)];
 
   box.style.backgroundImage = `url('${src}')`;
   box.style.backgroundSize  = '100% 100%';
+  startArenaEffect(_arenaEffects[src] || null);
 }
 
 buildCharGrid();
