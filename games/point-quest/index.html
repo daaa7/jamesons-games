@@ -96,6 +96,9 @@ h2{margin:0 0 4px;font-size:1.2rem}
 .feedback.ok{background:var(--good-bg);color:var(--good)}
 .feedback.no{background:var(--bad-bg);color:var(--bad)}
 .feedback .pts{margin-left:auto;font-size:1.05rem}
+.explain{display:none;margin-top:10px;padding:12px 16px;border-radius:12px;background:var(--blue-soft);border:1px solid var(--blue-mid);color:var(--ink);font-size:.92rem;line-height:1.6}
+.explain.show{display:block}
+.explain b{color:var(--blue)}
 .next-btn{display:none;margin-top:14px;width:100%;padding:13px;border:none;border-radius:12px;background:var(--blue);color:#fff;font-weight:800;font-size:1rem}
 .next-btn.show{display:block}
 .next-btn:hover{background:#1D4FCC}
@@ -245,6 +248,7 @@ h2{margin:0 0 4px;font-size:1.2rem}
       <div class="question" id="math-q"></div>
       <div class="choices" id="math-choices"></div>
       <div class="feedback" id="math-fb"><span id="math-fb-txt"></span><span class="pts" id="math-fb-pts"></span></div>
+      <div class="explain" id="math-explain"></div>
       <button class="next-btn" id="math-next">Next question →</button>
       <div class="scratch-note">✏️ Grab scratch paper — working it out on paper is how the pros do it.</div>
     </div>
@@ -282,6 +286,7 @@ h2{margin:0 0 4px;font-size:1.2rem}
         <div class="question word" id="quiz-q"></div>
         <div class="choices" id="quiz-choices" style="grid-template-columns:1fr"></div>
         <div class="feedback" id="quiz-fb"><span id="quiz-fb-txt"></span><span class="pts" id="quiz-fb-pts"></span></div>
+        <div class="explain" id="quiz-explain"></div>
         <button class="next-btn" id="quiz-next">Next question →</button>
       </div>
     </div>
@@ -513,27 +518,56 @@ function fracDistractors(n, d, kind){
   return out;
 }
 
+function chunkExplain(start, op, b, ans){
+  const bh = Math.floor(b/100)*100, br = b - bh;
+  const sym = op === '+' ? '+' : '−';
+  if (bh === 0 || br === 0) return start + ' ' + sym + ' ' + b + ' = ' + ans + '.';
+  const mid = op === '+' ? start + bh : start - bh;
+  return 'Work in chunks: ' + start + ' ' + sym + ' ' + bh + ' = ' + mid + ', then ' + sym + ' ' + br + ' more = ' + ans + '.';
+}
+function splitMulExplain(a, b){
+  const h = Math.floor(a/100)*100, t = Math.floor((a%100)/10)*10, o = a%10;
+  const parts = [h,t,o].filter(p=>p);
+  if (parts.length < 2) return a + ' × ' + b + ' = ' + (a*b) + '.';
+  return 'Break ' + a + ' apart: ' + parts.map(p=>'(' + p + ' × ' + b + ')').join(' + ') + ' = ' +
+    parts.map(p=>p*b).join(' + ') + ' = ' + (a*b) + '.';
+}
+function simplifyNote(n, d){
+  const g = gcd(n, d), s = fmtFrac(n, d);
+  if (s === n + '/' + d) return '.';
+  let out = '';
+  if (g > 1) out = ', then divide top and bottom by ' + g;
+  if (n/g > d/g) out += (out ? ' and ' : ', then ') + 'write it as a mixed number';
+  return out + ': ' + s + '.';
+}
+
 const GENERATORS = {
   1(){ // 3-digit add / subtract
     const a = rnd(126, 987), b = rnd(114, 878);
-    if (rnd(0,1)){ return { q: a + ' + ' + b + ' = ?', ans: a+b }; }
+    if (rnd(0,1)){ return { q: a + ' + ' + b + ' = ?', ans: a+b, explain: chunkExplain(a, '+', b, a+b) }; }
     const hi = Math.max(a,b), lo = Math.min(a,b);
-    return { q: hi + ' − ' + lo + ' = ?', ans: hi-lo };
+    return { q: hi + ' − ' + lo + ' = ?', ans: hi-lo, explain: chunkExplain(hi, '−', lo, hi-lo) };
   },
   2(){ // 2–3 digit × 1 digit
     const a = rnd(0,1) ? rnd(13, 98) : rnd(112, 489), b = rnd(3, 9);
-    return { q: a + ' × ' + b + ' = ?', ans: a*b };
+    return { q: a + ' × ' + b + ' = ?', ans: a*b, explain: splitMulExplain(a, b) };
   },
   3(){ // 2 digit × 2 digit
     const a = rnd(12, 79), b = rnd(12, 49);
-    return { q: a + ' × ' + b + ' = ?', ans: a*b };
+    const bt = Math.floor(b/10)*10, bo = b%10;
+    const explain = bo === 0
+      ? a + ' × ' + b + ' = ' + a + ' × ' + bt + ' = ' + (a*b) + '.'
+      : 'Split ' + b + ' into tens and ones: (' + a + ' × ' + bt + ') + (' + a + ' × ' + bo + ') = ' + (a*bt) + ' + ' + (a*bo) + ' = ' + (a*b) + '.';
+    return { q: a + ' × ' + b + ' = ?', ans: a*b, explain };
   },
   4(){ // division, sometimes with remainder
     const d = rnd(3, 9), q = rnd(12, 98);
-    if (rnd(0,1)){ return { q: (q*d) + ' ÷ ' + d + ' = ?', ans: q }; }
+    if (rnd(0,1)){ return { q: (q*d) + ' ÷ ' + d + ' = ?', ans: q,
+      explain: 'Check it backwards with multiplication: ' + q + ' × ' + d + ' = ' + (q*d) + ', so ' + (q*d) + ' ÷ ' + d + ' = ' + q + '.' }; }
     const r = rnd(1, d-1);
     const ansStr = q + ' R ' + r;
     return { q: (q*d + r) + ' ÷ ' + d + ' = ?  (quotient and remainder)', ansStr,
+      explain: d + ' × ' + q + ' = ' + (q*d) + ', and you need ' + r + ' more to reach ' + (q*d+r) + '. So it goes in ' + q + ' times with ' + r + ' left over: ' + ansStr + '.',
       distractors: [ (q+1)+' R '+r, q+' R '+Math.max(1,(r+1)%d||1), (q-1)+' R '+r ] };
   },
   5(){ // decimals add/subtract (money half the time)
@@ -543,10 +577,12 @@ const GENERATORS = {
     if (rnd(0,1)){
       const ans = +(a+b).toFixed(2);
       return { q: f(a) + ' + ' + f(b) + ' = ?', ansStr: f(ans),
+        explain: 'Line up the decimal points and add each column, right to left — just like whole numbers: ' + f(a) + ' + ' + f(b) + ' = ' + f(ans) + '.',
         distractors: [ f(+(ans+0.1).toFixed(2)), f(+(ans-0.1).toFixed(2)), f(+(ans+1).toFixed(2)) ] };
     }
     const hi = Math.max(a,b), lo = Math.min(a,b), ans = +(hi-lo).toFixed(2);
     return { q: f(hi) + ' − ' + f(lo) + ' = ?', ansStr: f(ans),
+      explain: 'Line up the decimal points and subtract each column, right to left — borrow if you need to: ' + f(hi) + ' − ' + f(lo) + ' = ' + f(ans) + '.',
       distractors: [ f(+(ans+0.1).toFixed(2)), f(Math.max(0.01,+(ans-0.1).toFixed(2))), f(+(ans+1).toFixed(2)) ] };
   },
   6(){ // fractions, like denominators + equivalents
@@ -554,13 +590,16 @@ const GENERATORS = {
       const d = pick([4,5,6,8,10,12]);
       const a = rnd(1, d-2), b = rnd(1, d-a-1);
       return { q: a + '/' + d + ' + ' + b + '/' + d + ' = ?  (simplest form)',
-        ansStr: fmtFrac(a+b, d), distractors: fracDistractors(a+b, d, fmtFrac(a+b, 2*d)) };
+        ansStr: fmtFrac(a+b, d),
+        explain: 'The bottoms (denominators) match, so just add the tops: ' + a + ' + ' + b + ' = ' + (a+b) + ' → ' + (a+b) + '/' + d + simplifyNote(a+b, d),
+        distractors: fracDistractors(a+b, d, fmtFrac(a+b, 2*d)) };
     }
     const base = pick([[1,2],[1,3],[2,3],[3,4],[2,5],[3,5]]);
     const k = rnd(2,4);
     const eq = (base[0]*k) + '/' + (base[1]*k);
     return { q: 'Which fraction is equivalent to ' + base[0] + '/' + base[1] + '?',
       ansStr: eq,
+      explain: 'Multiply the top AND bottom by the same number (' + k + '): (' + base[0] + '×' + k + ')/(' + base[1] + '×' + k + ') = ' + eq + '. The value doesn’t change.',
       distractors: strDistractors(eq, [ (base[0]*k+1) + '/' + (base[1]*k), (base[0]+k) + '/' + (base[1]+k),
         base[0] + '/' + (base[1]*k), (base[0]*k) + '/' + (base[1]*k+1), (base[1]*k) + '/' + (base[0]*k+base[1]) ]) };
   },
@@ -571,70 +610,93 @@ const GENERATORS = {
     const L = d1*d2/gcd(d1,d2);
     const n = a*(L/d1) + b*(L/d2);
     return { q: a + '/' + d1 + ' + ' + b + '/' + d2 + ' = ?  (simplest form)',
-      ansStr: fmtFrac(n, L), distractors: fracDistractors(n, L, fmtFrac(a+b, d1+d2)) };
+      ansStr: fmtFrac(n, L),
+      explain: 'The bottoms don’t match, so give both fractions the same denominator (' + L + '): ' +
+        a + '/' + d1 + ' = ' + (a*(L/d1)) + '/' + L + ' and ' + b + '/' + d2 + ' = ' + (b*(L/d2)) + '/' + L +
+        '. Now add the tops: ' + (a*(L/d1)) + ' + ' + (b*(L/d2)) + ' = ' + n + ' → ' + n + '/' + L + simplifyNote(n, L),
+      distractors: fracDistractors(n, L, fmtFrac(a+b, d1+d2)) };
   },
   8(){ // decimal × whole, and order of operations
     if (rnd(0,1)){
       const a = rnd(11, 99)/10, b = rnd(3, 9);
       const ans = +(a*b).toFixed(1);
       return { q: a.toFixed(1) + ' × ' + b + ' = ?', ansStr: ans.toFixed(1),
+        explain: 'Ignore the decimal first: ' + (a*10) + ' × ' + b + ' = ' + (a*10*b) + '. Then put the decimal back one place: ' + ans.toFixed(1) + '.',
         distractors: strDistractors(ans.toFixed(1), [ (a+b).toFixed(1), (ans+1).toFixed(1),
           Math.max(0.1,ans-1).toFixed(1), (ans+2).toFixed(1), (ans+0.5).toFixed(1) ]) };
     }
     const a = rnd(2,9), b = rnd(2,9), c = rnd(2,9);
     if (rnd(0,1)){
-      return { q: a + ' + ' + b + ' × ' + c + ' = ?', ans: a + b*c, trick: (a+b)*c };
+      return { q: a + ' + ' + b + ' × ' + c + ' = ?', ans: a + b*c, trick: (a+b)*c,
+        explain: 'Order of operations — multiply BEFORE you add: ' + b + ' × ' + c + ' = ' + (b*c) + ', then ' + a + ' + ' + (b*c) + ' = ' + (a + b*c) + '. (Adding first gives the trap answer ' + ((a+b)*c) + '.)' };
     }
-    return { q: '(' + a + ' + ' + b + ') × ' + c + ' = ?', ans: (a+b)*c, trick: a + b*c };
+    return { q: '(' + a + ' + ' + b + ') × ' + c + ' = ?', ans: (a+b)*c, trick: a + b*c,
+      explain: 'Parentheses first: ' + a + ' + ' + b + ' = ' + (a+b) + ', then ' + (a+b) + ' × ' + c + ' = ' + ((a+b)*c) + '.' };
   },
   9(){ // multi-step word problems
     const t = rnd(0, 4);
     if (t === 0){
       const p = rnd(4, 9), c = rnd(8, 15), g = rnd(3, 12);
       return { q: 'Jameson buys ' + p + ' packs of trading cards. Each pack has ' + c +
-        ' cards. He gives ' + g + ' cards to his friend. How many cards does he have left?', ans: p*c-g, word: true };
+        ' cards. He gives ' + g + ' cards to his friend. How many cards does he have left?', ans: p*c-g, word: true,
+        explain: 'Two steps: first ' + p + ' packs × ' + c + ' cards = ' + (p*c) + '. Then subtract the ' + g + ' he gave away: ' + (p*c) + ' − ' + g + ' = ' + (p*c-g) + '.' };
     }
     if (t === 1){
       const cost = rnd(3, 9), n = rnd(3, 6), pay = Math.ceil(cost*n/10)*10 + 10;
       const chg = '$' + (pay - cost*n);
       return { q: 'Movie tickets cost $' + cost + ' each. A family buys ' + n +
         ' tickets and pays with $' + pay + '. How much change do they get?', ansStr: chg, word: true,
+        explain: 'Two steps: first the total cost, ' + n + ' × $' + cost + ' = $' + (cost*n) + '. Then the change: $' + pay + ' − $' + (cost*n) + ' = ' + chg + '.',
         distractors: strDistractors(chg, [ '$' + (pay - cost*n + 2), '$' + Math.max(1, pay - cost*n - 2),
           '$' + (cost*n), '$' + (pay - cost*n + 5), '$' + (pay - cost*n + 1) ]) };
     }
     if (t === 2){
       const laps = rnd(4, 8), m = rnd(200, 450);
       return { q: 'A runner does ' + laps + ' laps of a ' + m + '-meter track every day. How many meters does she run in 3 days?',
-        ans: laps*m*3, word: true };
+        ans: laps*m*3, word: true,
+        explain: 'Two steps: one day is ' + laps + ' × ' + m + ' = ' + (laps*m) + ' meters. Three days is ' + (laps*m) + ' × 3 = ' + (laps*m*3) + ' meters.' };
     }
     if (t === 3){
       const rows = rnd(12, 24), seats = rnd(14, 28), sold = rnd(20, 80);
       return { q: 'A theater has ' + rows + ' rows with ' + seats + ' seats in each row. If ' + sold +
-        ' seats are empty, how many people are watching the show?', ans: rows*seats - sold, word: true };
+        ' seats are empty, how many people are watching the show?', ans: rows*seats - sold, word: true,
+        explain: 'Two steps: total seats = ' + rows + ' × ' + seats + ' = ' + (rows*seats) + '. Subtract the ' + sold + ' empty ones: ' + (rows*seats) + ' − ' + sold + ' = ' + (rows*seats-sold) + '.' };
     }
     const box = rnd(6, 12), per = rnd(18, 36), broken = rnd(4, 15);
     return { q: 'A store gets ' + box + ' boxes of markers with ' + per + ' markers in each box. ' + broken +
-      ' markers are broken. How many good markers can the store sell?', ans: box*per - broken, word: true };
+      ' markers are broken. How many good markers can the store sell?', ans: box*per - broken, word: true,
+      explain: 'Two steps: total markers = ' + box + ' × ' + per + ' = ' + (box*per) + '. Subtract the ' + broken + ' broken ones: ' + (box*per) + ' − ' + broken + ' = ' + (box*per-broken) + '.' };
   },
   10(){ // geometry, conversions, percents
     const t = rnd(0, 3);
     if (t === 0){
       const l = rnd(3, 9), w = rnd(2, 8), h = rnd(2, 6);
-      return { q: 'A box is ' + l + ' cm long, ' + w + ' cm wide, and ' + h + ' cm tall.\nWhat is its volume in cubic centimeters?', ans: l*w*h, word: true };
+      return { q: 'A box is ' + l + ' cm long, ' + w + ' cm wide, and ' + h + ' cm tall.\nWhat is its volume in cubic centimeters?', ans: l*w*h, word: true,
+        explain: 'Volume = length × width × height: ' + l + ' × ' + w + ' = ' + (l*w) + ', then × ' + h + ' = ' + (l*w*h) + ' cubic cm.' };
     }
     if (t === 1){
       const l = rnd(6, 15), w = rnd(3, 9);
-      if (rnd(0,1)) return { q: 'A rectangle is ' + l + ' m long and ' + w + ' m wide. What is its AREA in square meters?', ans: l*w, word: true, trick: 2*(l+w) };
-      return { q: 'A rectangle is ' + l + ' m long and ' + w + ' m wide. What is its PERIMETER in meters?', ans: 2*(l+w), word: true, trick: l*w };
+      if (rnd(0,1)) return { q: 'A rectangle is ' + l + ' m long and ' + w + ' m wide. What is its AREA in square meters?', ans: l*w, word: true, trick: 2*(l+w),
+        explain: 'Area = length × width = ' + l + ' × ' + w + ' = ' + (l*w) + ' m². (Perimeter — adding all four sides — would be ' + (2*(l+w)) + '. Don’t mix them up!)' };
+      return { q: 'A rectangle is ' + l + ' m long and ' + w + ' m wide. What is its PERIMETER in meters?', ans: 2*(l+w), word: true, trick: l*w,
+        explain: 'Perimeter = all four sides added: ' + l + ' + ' + w + ' + ' + l + ' + ' + w + ' = ' + (2*(l+w)) + ' m. (Area — l × w — would be ' + (l*w) + '. Don’t mix them up!)' };
     }
     if (t === 2){
-      const conv = pick([ ['meters','centimeters',100,rnd(2,9)], ['feet','inches',12,rnd(2,9)],
-                          ['minutes','seconds',60,rnd(2,9)], ['kilograms','grams',1000,rnd(2,6)] ]);
-      return { q: 'How many ' + conv[1] + ' are in ' + conv[3] + ' ' + conv[0] + '?', ans: conv[2]*conv[3], word: true };
+      const conv = pick([ ['meters','centimeters',100,rnd(2,9),'meter'], ['feet','inches',12,rnd(2,9),'foot'],
+                          ['minutes','seconds',60,rnd(2,9),'minute'], ['kilograms','grams',1000,rnd(2,6),'kilogram'] ]);
+      return { q: 'How many ' + conv[1] + ' are in ' + conv[3] + ' ' + conv[0] + '?', ans: conv[2]*conv[3], word: true,
+        explain: 'Each ' + conv[4] + ' has ' + conv[2] + ' ' + conv[1] + ', so multiply: ' + conv[3] + ' × ' + conv[2] + ' = ' + (conv[2]*conv[3]) + '.' };
     }
     const pc = pick([10, 20, 25, 50]);
     const base = pick([40, 60, 80, 120, 200, 240, 400]);
-    return { q: 'What is ' + pc + '% of ' + base + '?', ans: base*pc/100, word: true, trick: base - base*pc/100 };
+    const pcTips = {
+      10: '10% means divide by 10: ' + base + ' ÷ 10 = ' + (base/10) + '.',
+      20: '10% of ' + base + ' is ' + (base/10) + ', and 20% is double that: ' + (base/5) + '.',
+      25: '25% is one quarter: ' + base + ' ÷ 4 = ' + (base/4) + '.',
+      50: '50% is one half: ' + base + ' ÷ 2 = ' + (base/2) + '.'
+    };
+    return { q: 'What is ' + pc + '% of ' + base + '?', ans: base*pc/100, word: true, trick: base - base*pc/100,
+      explain: pcTips[pc] };
   }
 };
 
@@ -657,7 +719,7 @@ function newMathQuestion(){
     }
     choices = shuffle([answer].concat(ds));
   }
-  mathQ = { text: raw.q, answer, choices, word: !!raw.word };
+  mathQ = { text: raw.q, answer, choices, word: !!raw.word, explain: raw.explain || '' };
   mathLocked = false;
   renderMath();
 }
@@ -680,6 +742,7 @@ function renderMath(){
     box.appendChild(b);
   });
   $('math-fb').className = 'feedback';
+  $('math-explain').className = 'explain';
   $('math-next').className = 'next-btn';
 }
 function answerMath(i, evt){
@@ -714,6 +777,12 @@ function answerMath(i, evt){
     $('math-fb-txt').textContent = '✗ Not quite — the answer is ' + mathQ.answer + '.';
     $('math-fb-pts').textContent = '';
     fb.className = 'feedback show no';
+    if (mathQ.explain){
+      const ex = $('math-explain');
+      ex.innerHTML = '<b>💡 How to solve it:</b> ';
+      ex.appendChild(document.createTextNode(mathQ.explain));
+      ex.classList.add('show');
+    }
     if (mathRunDown >= 2 && S.mathLevel > 1){
       S.mathLevel--; mathRunDown = 0;
       toast('Let’s build back up — Level ' + S.mathLevel + ': ' + LEVEL_NAMES[S.mathLevel-1]);
@@ -756,15 +825,20 @@ Marcus looked at the board again. Dana had lined the edges with tiny lightning b
   ],
   questions:[
     { q:'Why did Marcus go to the garage at the beginning of the story?',
-      opts:['To help his dad find the toolbox','To get his skateboard for his Saturday ride','To look for his sister Dana','To clean out the refrigerator box'], a:1 },
+      opts:['To help his dad find the toolbox','To get his skateboard for his Saturday ride','To look for his sister Dana','To clean out the refrigerator box'], a:1,
+      why:'Page 1 says every Saturday morning Marcus rode his skateboard to Pinewood Park — he opened the garage to get it for his ride.' },
     { q:'What clue told Marcus that Dana might know something about the skateboard?',
-      opts:['She was riding her scooter in the garage','She told him to check the treehouse','Her cheeks turned red and she stared at her bowl','She had glitter glue on her hands'], a:2 },
+      opts:['She was riding her scooter in the garage','She told him to check the treehouse','Her cheeks turned red and she stared at her bowl','She had glitter glue on her hands'], a:2,
+      why:'On page 2, Dana stared down into her bowl "very, very hard" and her cheeks turned red — signs she was hiding something.' },
     { q:'How did Marcus figure out where the skateboard was?',
-      opts:['He followed muddy wheel tracks across the yard','His mom told him where to look','He heard Dana in the treehouse','He found a note on the workbench'], a:0 },
+      opts:['He followed muddy wheel tracks across the yard','His mom told him where to look','He heard Dana in the treehouse','He found a note on the workbench'], a:0,
+      why:'On page 3, Marcus spotted thin, muddy wheel tracks on the driveway and followed them across the grass to the treehouse.' },
     { q:'Why did Dana take the skateboard without asking?',
-      opts:['She wanted to learn to ride it','She was mad at Marcus','She wanted to sell it at the park','She was decorating it as a birthday surprise'], a:3 },
+      opts:['She wanted to learn to ride it','She was mad at Marcus','She wanted to sell it at the park','She was decorating it as a birthday surprise'], a:3,
+      why:'On page 4, Dana explains she was decorating the board with lightning stickers as a surprise for his birthday tomorrow.' },
     { q:'In the story, "his stomach dropped" means Marcus suddenly felt —',
-      opts:['hungry for lunch','worried and upset','sick from breakfast','excited and happy'], a:1 }
+      opts:['hungry for lunch','worried and upset','sick from breakfast','excited and happy'], a:1,
+      why:'"His stomach dropped" is an expression for a sudden sinking, worried feeling — it happens right when he sees the skateboard is gone.' }
   ]
 },
 {
@@ -782,15 +856,20 @@ Ava laughed so hard she had to cover her mouth. That afternoon, Ms. Chen moved L
   ],
   questions:[
     { q:'What is this story mostly about?',
-      opts:['How libraries get renovated','A cat who ran away from town','Figuring out why a library cat moved to a new spot','Teaching a cat to do tricks'], a:2 },
+      opts:['How libraries get renovated','A cat who ran away from town','Figuring out why a library cat moved to a new spot','Teaching a cat to do tricks'], a:2,
+      why:'The whole story follows Ava working out why Luna vanished — and discovering she had just followed the sunshine upstairs.' },
     { q:'Why did Luna stop sleeping in the story corner?',
-      opts:['The shelves blocked the window and her sunbeam was gone','Too many kids were reading out loud','Ms. Chen moved her bed upstairs','The new carpet smelled like paint'], a:0 },
+      opts:['The shelves blocked the window and her sunbeam was gone','Too many kids were reading out loud','Ms. Chen moved her bed upstairs','The new carpet smelled like paint'], a:0,
+      why:'Page 2 says the workers moved the tall bookshelves in front of the big window, so the warm sunbeam disappeared from the corner.' },
     { q:'What did Ava notice that helped her solve the mystery?',
-      opts:['Muddy paw prints on the stairs','Luna always napped where the sunlight landed','The salmon treats were missing','The workers left a window open'], a:1 },
+      opts:['Muddy paw prints on the stairs','Luna always napped where the sunlight landed','The salmon treats were missing','The workers left a window open'], a:1,
+      why:'Ava realized Luna never cared about the rug — she cared about the sunshine. "If I were a cat, I would follow the sun."' },
     { q:'In this story, a "renovation" is —',
-      opts:['a kind of library book','a party for the whole town','a cat’s favorite napping spot','fixing up and improving a building'], a:3 },
+      opts:['a kind of library book','a party for the whole town','a cat’s favorite napping spot','fixing up and improving a building'], a:3,
+      why:'Page 1 describes the renovation as workers arriving with ladders and paint for new shelves, new paint, and new carpet — fixing up the building.' },
     { q:'What will most likely happen after the story ends?',
-      opts:['Luna will disappear again','Kids will read to Luna in the sunny spot upstairs','The library will close for good','Ms. Chen will give Luna away'], a:1 }
+      opts:['Luna will disappear again','Kids will read to Luna in the sunny spot upstairs','The library will close for good','Ms. Chen will give Luna away'], a:1,
+      why:'Ms. Chen moved Luna’s bed to the sunny spot and posted "STORY TIME HAS MOVED — FOLLOW THE SUN," and the kids followed.' }
   ]
 },
 {
@@ -819,15 +898,20 @@ That night, Priya taped the ribbon above her desk and called her grandfather. "I
   ],
   questions:[
     { q:'Why didn’t the volcano erupt properly the first time?',
-      opts:['Priya used water instead of vinegar','Priya poured too fast and it spilled','The clay volcano had a crack in it','The vinegar was cold and Priya forgot the dish soap'], a:3 },
+      opts:['Priya used water instead of vinegar','Priya poured too fast and it spilled','The clay volcano had a crack in it','The vinegar was cold and Priya forgot the dish soap'], a:3,
+      why:'On page 2, Priya discovers the school’s vinegar had been stored in the icy supply room, and her dish soap was still on the kitchen counter at home.' },
     { q:'What did Priya do right after the failed eruption?',
-      opts:['She listed what was different from her tests at home','She asked the judges for a second chance right away','She threw the volcano in the trash','She borrowed the potato battery'], a:0 },
+      opts:['She listed what was different from her tests at home','She asked the judges for a second chance right away','She threw the volcano in the trash','She borrowed the potato battery'], a:0,
+      why:'Instead of quitting, she pulled out her notebook and listed everything about her tests at home — warm kitchen, cupboard vinegar, dish soap.' },
     { q:'Which word best describes Priya in this story?',
-      opts:['jealous','persistent','careless','shy'], a:1 },
+      opts:['jealous','persistent','careless','shy'], a:1,
+      why:'Persistent means not giving up. Priya kept working after the failure, tracked down both problems, and tried again.' },
     { q:'Why were the judges so impressed with Priya?',
-      opts:['Her volcano was the biggest at the fair','She explained how she found and fixed the problem','She helped the other students set up','Her eruption was louder than everyone else’s'], a:1 },
+      opts:['Her volcano was the biggest at the fair','She explained how she found and fixed the problem','She helped the other students set up','Her eruption was louder than everyone else’s'], a:1,
+      why:'The head judge said it on page 4: Priya showed "what a scientist does when an experiment doesn’t" work — she explained the problem and her fix.' },
     { q:'Her grandfather’s advice, "don’t get mad — get curious," means —',
-      opts:['never enter a science fair twice','anger helps you work faster','when something fails, investigate the reason','always ask a teacher to fix your project'], a:2 }
+      opts:['never enter a science fair twice','anger helps you work faster','when something fails, investigate the reason','always ask a teacher to fix your project'], a:2,
+      why:'His full advice was: "Something was different. Find it." — treat a failure like a question and hunt for the reason.' }
   ]
 },
 {
@@ -854,15 +938,20 @@ By the end of July, Miller's Creek ran cold and clear again. Rosa knelt on the f
   ],
   questions:[
     { q:'What problem did the twins discover at the beginning of the story?',
-      opts:['The crossing log had washed away','The creek was cloudy and the minnows were gone','The ballfield was flooded','Someone had taken Rosa’s notebook'], a:1 },
+      opts:['The crossing log had washed away','The creek was cloudy and the minnows were gone','The ballfield was flooded','Someone had taken Rosa’s notebook'], a:1,
+      why:'Page 1 says the water turned cloudy "like weak chocolate milk" and Rosa counted zero minnows where there had been forty.' },
     { q:'What evidence helped convince Ms. Alvarez there was a real problem?',
-      opts:['Rosa’s notebook with minnow counts, dates, and a photo','A warning letter from the town','Jack’s collection of fish','A TV news report about the creek'], a:0 },
+      opts:['Rosa’s notebook with minnow counts, dates, and a photo','A warning letter from the town','Jack’s collection of fish','A TV news report about the creek'], a:0,
+      why:'On page 3, Rosa showed her notebook — the minnow counts, the dates, and the photo of the suds — and Ms. Alvarez’s eyebrows went up.' },
     { q:'According to the story, why are storm drains a problem for creeks?',
-      opts:['They make the water too cold for fish','They are too small to carry rainwater','They empty into creeks without any cleaning or treatment','They are always full of leaves'], a:2 },
+      opts:['They make the water too cold for fish','They are too small to carry rainwater','They empty into creeks without any cleaning or treatment','They are always full of leaves'], a:2,
+      why:'Rosa explains on page 3: sink water goes to a treatment plant, but storm drains skip all that and empty straight into creeks and rivers.' },
     { q:'How was the problem solved?',
-      opts:['The creek was closed for the summer','The eighth graders canceled their trip','The town built a new treatment plant','The car wash moved to a grassy lot so the ground could filter the water'], a:3 },
+      opts:['The creek was closed for the summer','The eighth graders canceled their trip','The town built a new treatment plant','The car wash moved to a grassy lot so the ground could filter the water'], a:3,
+      why:'On page 4, the car wash moved to the grassy lot beside the school, where the ground could soak up and filter the water.' },
     { q:'What does Rosa mean by "everything goes somewhere"?',
-      opts:['Water you pour out doesn’t disappear — it ends up in a real place','Lost things always turn up eventually','Fish migrate to new creeks every summer','Everyone should travel more'], a:0 }
+      opts:['Water you pour out doesn’t disappear — it ends up in a real place','Lost things always turn up eventually','Fish migrate to new creeks every summer','Everyone should travel more'], a:0,
+      why:'The soapy water didn’t just "go away" — it flowed through the storm drain and came out in the creek. Everything ends up in a real place.' }
   ]
 },
 {
@@ -898,17 +987,23 @@ Years later, when her own sign hung over her own shop — E. HART, CLOCKMAKER �
   ],
   questions:[
     { q:'Where and when does this story take place?',
-      opts:['A modern city watch store','A clockmaker’s shop in the countryside in 1892','A courthouse in the 1990s','A castle tower in ancient times'], a:1 },
+      opts:['A modern city watch store','A clockmaker’s shop in the countryside in 1892','A courthouse in the 1990s','A castle tower in ancient times'], a:1,
+      why:'The very first line sets it: "In the autumn of 1892," in Mr. Abernathy’s clock shop in Cedar County.' },
     { q:'How did Eliza learn the skills of clockmaking?',
-      opts:['She read Mr. Abernathy’s books in secret','Mr. Abernathy gave her lessons after work','She carefully watched Mr. Abernathy for two years and drew what she saw','Her sisters taught her at home'], a:2 },
+      opts:['She read Mr. Abernathy’s books in secret','Mr. Abernathy gave her lessons after work','She carefully watched Mr. Abernathy for two years and drew what she saw','Her sisters taught her at home'], a:2,
+      why:'Page 1 says no one made a rule about watching — her eyes followed his hands every day, and at night she drew what she remembered.' },
     { q:'Why couldn’t Mr. Abernathy fix the escapement himself?',
-      opts:['His hands had begun to tremble with age','He couldn’t climb the tower stairs','He had never repaired a tower clock before','He forgot to bring the right tools'], a:0 },
+      opts:['His hands had begun to tremble with age','He couldn’t climb the tower stairs','He had never repaired a tower clock before','He forgot to bring the right tools'], a:0,
+      why:'Pages 2–3 say his hands had begun to tremble "the way a leaf shivers before a storm" — three times his fingers slipped on the tiny screw.' },
     { q:'Why did Mr. Abernathy ask Eliza hard questions before letting her touch the clock?',
-      opts:['He wanted to stall until morning','He was testing whether she truly understood the work','He hoped she would give up and go home','It was a rule set by the mayor'], a:1 },
+      opts:['He wanted to stall until morning','He was testing whether she truly understood the work','He hoped she would give up and go home','It was a rule set by the mayor'], a:1,
+      why:'He quizzed her on gear ratios, pendulum lengths, and what different ticks mean — only after she answered every one did he hand her the screwdriver.' },
     { q:'Based on the story, an "apprentice" is someone who —',
-      opts:['owns a shop in a small town','fixes only tower clocks','sweeps floors for two coins a week','learns a skilled trade from an expert'], a:3 },
+      opts:['owns a shop in a small town','fixes only tower clocks','sweeps floors for two coins a week','learns a skilled trade from an expert'], a:3,
+      why:'When Mr. Abernathy says "show me, apprentice," he is accepting Eliza as his student in the craft — an apprentice learns a trade from a master.' },
     { q:'What is the main theme (lesson) of this story?',
-      opts:['Old clocks are better than new ones','Never trust someone who sweeps floors','Paying close attention is a powerful way to learn','Festivals are the best day of the year'], a:2 }
+      opts:['Old clocks are better than new ones','Never trust someone who sweeps floors','Paying close attention is a powerful way to learn','Festivals are the best day of the year'], a:2,
+      why:'Eliza learned an entire craft just by watching carefully — and her own rule at the end says it: "watch everything."' }
   ]
 },
 {
@@ -929,17 +1024,23 @@ For all their talents, octopuses live short lives — most survive only one to f
   ],
   questions:[
     { q:'What is the main purpose of this article?',
-      opts:['To convince readers to keep octopuses as pets','To describe what makes octopuses unusual and intelligent','To explain how aquariums are built','To tell the life story of one famous octopus'], a:1 },
+      opts:['To convince readers to keep octopuses as pets','To describe what makes octopuses unusual and intelligent','To explain how aquariums are built','To tell the life story of one famous octopus'], a:1,
+      why:'Every section adds to one big idea — strange bodies, camouflage, tool use, escapes, arm-brains — what makes octopuses unusual and smart. Inky is just one example, not the whole article.' },
     { q:'Why can an octopus squeeze through a gap the size of a coin?',
-      opts:['Its body is made mostly of water','It has three hearts pumping together','It has no bones — only its beak is hard','Its arms can unscrew tight spaces'], a:2 },
+      opts:['Its body is made mostly of water','It has three hearts pumping together','It has no bones — only its beak is hard','Its arms can unscrew tight spaces'], a:2,
+      why:'Page 1 says an octopus has no bones at all; its beak is the only hard part, so "if the beak fits through a hole, the rest of the animal will follow."' },
     { q:'What do chromatophores allow an octopus to do?',
-      opts:['Breathe underwater with copper blood','Change its color and pattern in under a second','Taste food with its arms','Squeeze through small openings'], a:1 },
+      opts:['Breathe underwater with copper blood','Change its color and pattern in under a second','Taste food with its arms','Squeeze through small openings'], a:1,
+      why:'Page 2 describes chromatophores as tiny color-changing cells — balloons of pigment — that let the octopus change color and pattern in less than one second.' },
     { q:'Why does the author include the story of Inky?',
-      opts:['It is evidence of how clever octopuses can be','It shows that aquariums are unsafe for visitors','It proves octopuses can live in drainpipes','It explains why octopuses have short lives'], a:0 },
+      opts:['It is evidence of how clever octopuses can be','It shows that aquariums are unsafe for visitors','It proves octopuses can live in drainpipes','It explains why octopuses have short lives'], a:0,
+      why:'Inky appears on the intelligence page, right after the jar lids and coconut armor — one more piece of evidence: "How smart is an octopus? Consider the evidence."' },
     { q:'The article says two-thirds of an octopus’s neurons are in its arms. This helps explain why —',
-      opts:['octopuses have blue blood','each arm can sense and react on its own','octopuses only live a few years','the mimic octopus lives in Indonesia'], a:1 },
+      opts:['octopuses have blue blood','each arm can sense and react on its own','octopuses only live a few years','the mimic octopus lives in Indonesia'], a:1,
+      why:'Page 4 says that because most neurons are in the arms, "each arm can taste, touch, and even make simple decisions on its own."' },
     { q:'Which of these is an OPINION rather than a fact from the article?',
-      opts:['Octopuses have three hearts','The veined octopus carries coconut shells','You could hardly design a better movie alien than the octopus','Inky escaped through a drainpipe in 2016'], a:2 }
+      opts:['Octopuses have three hearts','The veined octopus carries coconut shells','You could hardly design a better movie alien than the octopus','Inky escaped through a drainpipe in 2016'], a:2,
+      why:'The "movie alien" line is the author’s judgment — you can’t prove it true or false. The other three are checkable facts.' }
   ]
 }
 ];
@@ -1024,6 +1125,7 @@ function renderQuizQ(){
     box.appendChild(b);
   });
   $('quiz-fb').className = 'feedback';
+  $('quiz-explain').className = 'explain';
   $('quiz-next').className = 'next-btn';
 }
 function answerQuiz(i, evt){
@@ -1050,6 +1152,12 @@ function answerQuiz(i, evt){
     $('quiz-fb-txt').textContent = '✗ Not this time — the answer was ' + ['A','B','C','D'][qz.a] + '.';
     $('quiz-fb-pts').textContent = '';
     fb.className = 'feedback show no';
+    if (qz.why){
+      const ex = $('quiz-explain');
+      ex.innerHTML = '<b>💡 Why:</b> ';
+      ex.appendChild(document.createTextNode(qz.why));
+      ex.classList.add('show');
+    }
     save(); renderScoreboard();
   }
   $('quiz-next').textContent = quizIdx === curStory.questions.length-1 ? 'See my results →' : 'Next question →';
