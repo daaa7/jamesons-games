@@ -1,0 +1,1287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jameson's Point Quest — 5th Grade Math &amp; Reading</title>
+<style>
+:root{
+  --navy:#1E3A5F; --blue:#2563EB; --blue-soft:#EFF4FE; --blue-mid:#BFD3F8;
+  --ink:#17233B; --ink-2:#4B5A75; --ink-3:#8A96AC;
+  --surface:#F5F7FB; --card:#FFFFFF; --line:#E3E9F2;
+  --good:#177245; --good-bg:#E8F5EE; --bad:#B3261E; --bad-bg:#FDECEA;
+  --gold:#B78103; --gold-bg:#FFF7E0;
+  --radius:14px;
+  --shadow:0 1px 3px rgba(23,35,59,.08), 0 4px 14px rgba(23,35,59,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  background:var(--surface); color:var(--ink); line-height:1.5;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;cursor:pointer}
+
+/* ---------- header ---------- */
+header{background:var(--navy);color:#fff;padding:14px 16px 0}
+.hd-inner{max-width:860px;margin:0 auto}
+.hd-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;letter-spacing:.2px}
+.brand .bolt{width:34px;height:34px;border-radius:9px;background:var(--blue);display:grid;place-items:center;font-size:1.1rem}
+.brand small{display:block;font-weight:500;font-size:.72rem;opacity:.75;letter-spacing:.4px}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.tile{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:8px 14px;min-width:96px}
+.tile .lab{font-size:.68rem;text-transform:uppercase;letter-spacing:.8px;opacity:.75}
+.tile .val{font-size:1.3rem;font-weight:800;line-height:1.2}
+.tile .val .unit{font-size:.75rem;font-weight:600;opacity:.75}
+.goal-tile{cursor:pointer;position:relative}
+.goal-tile:hover{background:rgba(255,255,255,.16)}
+.goal-tile .edit{position:absolute;top:6px;right:8px;font-size:.7rem;opacity:.6}
+.meter{max-width:860px;margin:12px auto 0;padding-bottom:14px}
+.meter .m-row{display:flex;justify-content:space-between;font-size:.75rem;opacity:.85;margin-bottom:5px}
+.m-track{height:12px;border-radius:999px;background:rgba(255,255,255,.16);overflow:hidden}
+.m-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#4A83F0,#7EB0FF);transition:width .6s cubic-bezier(.2,.8,.2,1);min-width:4px}
+.m-fill.done{background:linear-gradient(90deg,#2FA968,#69D49A)}
+
+/* ---------- tabs ---------- */
+nav{background:var(--navy);padding:0 16px}
+.tabs{max-width:860px;margin:0 auto;display:flex;gap:4px}
+.tab{background:transparent;border:none;color:rgba(255,255,255,.7);padding:11px 18px;font-weight:700;font-size:.95rem;border-radius:10px 10px 0 0}
+.tab.active{background:var(--surface);color:var(--navy)}
+.tab:not(.active):hover{color:#fff}
+
+/* ---------- main ---------- */
+main{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+.view{display:none}
+.view.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+.card + .card{margin-top:16px}
+h2{margin:0 0 4px;font-size:1.2rem}
+.sub{color:var(--ink-2);font-size:.9rem;margin:0 0 14px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);color:var(--blue);border:1px solid var(--blue-mid);border-radius:999px;padding:3px 12px;font-size:.78rem;font-weight:700}
+.chip.gold{background:var(--gold-bg);color:var(--gold);border-color:#EAD48A}
+
+/* ---------- home ---------- */
+.home-hero h2{font-size:1.5rem}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:560px){.home-grid{grid-template-columns:1fr}}
+.launch-card{display:flex;align-items:center;gap:16px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;transition:border-color .12s, transform .12s}
+.launch-card:hover{border-color:var(--blue);transform:translateY(-2px)}
+.lc-icon{font-size:2.2rem}
+.lc-body{flex:1}
+.lc-title{display:block;font-size:1.15rem;font-weight:800;color:var(--navy)}
+.lc-sub{display:block;font-size:.85rem;color:var(--ink-2);margin-top:2px}
+.lc-arrow{font-size:1.4rem;font-weight:800;color:var(--blue)}
+.home-how{margin-top:16px;font-size:.9rem;color:var(--ink-2)}
+
+/* ---------- math ---------- */
+.m-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.streak{font-weight:700;color:var(--ink-2);font-size:.85rem}
+.streak.hot{color:#C2410C}
+.question{font-size:1.45rem;font-weight:700;margin:10px 0 20px;white-space:pre-line}
+.question.word{font-size:1.08rem;font-weight:600;line-height:1.65}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.choices{grid-template-columns:1fr}}
+.choice{display:flex;align-items:center;gap:12px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:14px 16px;font-size:1.1rem;font-weight:700;color:var(--ink);transition:border-color .12s, background .12s}
+.choice:hover:not(:disabled){border-color:var(--blue);background:var(--blue-soft)}
+.choice:disabled{cursor:default}
+.choice .key{width:28px;height:28px;flex:0 0 28px;border-radius:8px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;font-size:.85rem;color:var(--ink-2)}
+.choice.correct{border-color:var(--good);background:var(--good-bg)}
+.choice.correct .key{background:var(--good);border-color:var(--good);color:#fff}
+.choice.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.choice.wrong .key{background:var(--bad);border-color:var(--bad);color:#fff}
+.feedback{display:none;margin-top:16px;padding:12px 16px;border-radius:12px;font-weight:700;align-items:center;gap:10px}
+.feedback.show{display:flex}
+.feedback.ok{background:var(--good-bg);color:var(--good)}
+.feedback.no{background:var(--bad-bg);color:var(--bad)}
+.feedback .pts{margin-left:auto;font-size:1.05rem}
+.next-btn{display:none;margin-top:14px;width:100%;padding:13px;border:none;border-radius:12px;background:var(--blue);color:#fff;font-weight:800;font-size:1rem}
+.next-btn.show{display:block}
+.next-btn:hover{background:#1D4FCC}
+.scratch-note{margin-top:14px;color:var(--ink-3);font-size:.8rem;text-align:center}
+
+/* ---------- reading ---------- */
+.story-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:14px}
+.story-card{text-align:left;background:var(--card);border:2px solid var(--line);border-radius:var(--radius);padding:16px;transition:border-color .12s, transform .12s}
+.story-card:hover{border-color:var(--blue);transform:translateY(-2px)}
+.story-card h3{margin:8px 0 4px;font-size:1.02rem}
+.story-card .meta{color:var(--ink-3);font-size:.8rem}
+.story-card .done-badge{color:var(--good);font-weight:700;font-size:.8rem}
+.lvl-dots{display:inline-flex;gap:3px;vertical-align:middle}
+.lvl-dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.lvl-dots i.on{background:var(--blue)}
+.tip{display:flex;gap:10px;align-items:flex-start;background:var(--gold-bg);border:1px solid #EAD48A;border-radius:12px;padding:10px 14px;font-size:.85rem;color:#6b4d00;margin-bottom:14px}
+.pager{display:flex;align-items:center;justify-content:space-between;margin-top:18px;gap:10px}
+.pager .pg{color:var(--ink-3);font-size:.85rem;font-weight:600}
+.pg-btn{padding:10px 22px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-weight:700;color:var(--ink)}
+.pg-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.pg-btn.primary:hover{background:#1D4FCC}
+.pg-btn:disabled{opacity:.4;cursor:default}
+.story-body{font-size:1.06rem;line-height:1.85;color:var(--ink);cursor:text}
+.story-body p{margin:0 0 1em}
+.back-link{background:none;border:none;color:var(--blue);font-weight:700;padding:0;margin-bottom:12px;font-size:.9rem}
+.quiz-progress{color:var(--ink-3);font-size:.82rem;font-weight:700;margin-bottom:6px}
+.results{text-align:center;padding:12px 0}
+.results .big{font-size:2.6rem;font-weight:800;color:var(--navy)}
+.results .earned{color:var(--good);font-weight:800;font-size:1.2rem;margin:6px 0 14px}
+
+/* ---------- word popup ---------- */
+#word-pop{position:fixed;z-index:60;width:min(320px,calc(100vw - 24px));background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 32px rgba(23,35,59,.22);padding:16px;display:none}
+#word-pop.show{display:block}
+#word-pop .wp-word{font-size:1.25rem;font-weight:800;color:var(--navy)}
+#word-pop .wp-phon{color:var(--ink-3);font-size:.85rem;margin-left:6px}
+#word-pop .wp-say{margin-top:8px;display:inline-flex;align-items:center;gap:8px;background:var(--blue-soft);border:1px solid var(--blue-mid);color:var(--blue);border-radius:999px;padding:6px 14px;font-weight:700;font-size:.85rem}
+#word-pop .wp-say:hover{background:var(--blue-mid)}
+#word-pop .wp-defs{margin-top:10px;font-size:.88rem;color:var(--ink-2);max-height:180px;overflow:auto}
+#word-pop .wp-defs .pos{font-style:italic;color:var(--ink-3);margin-right:6px}
+#word-pop .wp-defs p{margin:0 0 8px}
+#word-pop .wp-close{position:absolute;top:8px;right:10px;background:none;border:none;font-size:1.1rem;color:var(--ink-3)}
+
+/* ---------- progress ---------- */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.stat .lab{font-size:.7rem;text-transform:uppercase;letter-spacing:.8px;color:var(--ink-3);font-weight:700}
+.stat .val{font-size:1.7rem;font-weight:800;color:var(--navy);line-height:1.3}
+.stat .cap{font-size:.78rem;color:var(--ink-2)}
+.chart-wrap{position:relative}
+#chart-tip{position:absolute;pointer-events:none;background:var(--navy);color:#fff;font-size:.78rem;font-weight:600;padding:5px 10px;border-radius:8px;transform:translate(-50%,-120%);white-space:nowrap;display:none}
+
+/* ---------- toasts / points fly ---------- */
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 22px;border-radius:999px;font-weight:700;box-shadow:var(--shadow);opacity:0;transition:opacity .3s;z-index:70;pointer-events:none;font-size:.92rem}
+#toast.show{opacity:1}
+.fly{position:fixed;font-weight:800;color:var(--good);font-size:1.5rem;z-index:65;pointer-events:none;animation:flyup 1.1s ease-out forwards}
+@keyframes flyup{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-70px)}}
+.confetti{position:fixed;top:-12px;z-index:80;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+
+/* goal editor */
+#goal-editor{position:fixed;z-index:75;inset:0;background:rgba(23,35,59,.45);display:none;place-items:center}
+#goal-editor.show{display:grid}
+.ge-card{background:var(--card);border-radius:16px;padding:24px;width:min(340px,90vw);box-shadow:var(--shadow)}
+.ge-card h3{margin:0 0 4px}
+.ge-card p{margin:0 0 14px;color:var(--ink-2);font-size:.88rem}
+.ge-card input{width:100%;padding:12px;font-size:1.2rem;font-weight:700;border:2px solid var(--line);border-radius:10px;text-align:center}
+.ge-card input:focus{outline:none;border-color:var(--blue)}
+.ge-actions{display:flex;gap:10px;margin-top:14px}
+.ge-actions button{flex:1;padding:11px;border-radius:10px;font-weight:700;border:1px solid var(--line);background:var(--card)}
+.ge-actions .save{background:var(--blue);border-color:var(--blue);color:#fff}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd-inner">
+    <div class="hd-top">
+      <div class="brand">
+        <span class="bolt">⚡</span>
+        <span>Point Quest<small>5th Grade · Math &amp; Reading</small></span>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="lab">Today</div><div class="val" id="t-today">0 <span class="unit">pts</span></div></div>
+        <div class="tile goal-tile" id="goal-tile" title="Click to change your goal">
+          <span class="edit">✏️</span>
+          <div class="lab">Daily goal</div><div class="val" id="t-goal">300 <span class="unit">pts</span></div>
+        </div>
+        <div class="tile"><div class="lab">All-time</div><div class="val" id="t-alltime">0 <span class="unit">pts</span></div></div>
+      </div>
+    </div>
+    <div class="meter">
+      <div class="m-row"><span id="m-label">Goal progress</span><span id="m-pct">0%</span></div>
+      <div class="m-track"><div class="m-fill" id="m-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="tabs">
+    <button class="tab active" data-view="home">🏠 Home</button>
+    <button class="tab" data-view="math">🧮 Math</button>
+    <button class="tab" data-view="reading">📖 Reading</button>
+    <button class="tab" data-view="progress">🏆 My Progress</button>
+  </div>
+</nav>
+
+<main>
+  <!-- ============ HOME ============ -->
+  <section class="view active" id="view-home">
+    <div class="card home-hero">
+      <h2 id="home-greet">Ready to earn some points?</h2>
+      <p class="sub" id="home-goal-line"></p>
+    </div>
+    <div class="home-grid">
+      <button class="launch-card" data-goto="math">
+        <span class="lc-icon">🧮</span>
+        <span class="lc-body">
+          <span class="lc-title">Math Challenge</span>
+          <span class="lc-sub" id="home-math-sub"></span>
+        </span>
+        <span class="lc-arrow">→</span>
+      </button>
+      <button class="launch-card" data-goto="reading">
+        <span class="lc-icon">📖</span>
+        <span class="lc-body">
+          <span class="lc-title">Story Library</span>
+          <span class="lc-sub" id="home-read-sub"></span>
+        </span>
+        <span class="lc-arrow">→</span>
+      </button>
+    </div>
+    <div class="card home-how">
+      <b>How it works:</b> answer questions to earn points. Get questions right in a row and they get harder — and worth more. Hit your daily goal for a celebration. 🎉
+    </div>
+  </section>
+
+  <!-- ============ MATH ============ -->
+  <section class="view" id="view-math">
+    <div class="card">
+      <div class="m-head">
+        <div>
+          <h2>Math Challenge</h2>
+          <span class="chip" id="math-lvl-chip">Level 1 · Add &amp; Subtract</span>
+        </div>
+        <div class="streak" id="math-streak">Streak: 0</div>
+      </div>
+      <div class="question" id="math-q"></div>
+      <div class="choices" id="math-choices"></div>
+      <div class="feedback" id="math-fb"><span id="math-fb-txt"></span><span class="pts" id="math-fb-pts"></span></div>
+      <button class="next-btn" id="math-next">Next question →</button>
+      <div class="scratch-note">✏️ Grab scratch paper — working it out on paper is how the pros do it.</div>
+    </div>
+  </section>
+
+  <!-- ============ READING ============ -->
+  <section class="view" id="view-reading">
+    <div id="reading-home">
+      <div class="tip">💡 <span><b>While you read:</b> right-click any word (or press &amp; hold on a tablet) to hear it out loud and see what it means.</span></div>
+      <div class="card">
+        <h2>Story Library</h2>
+        <p class="sub">Your reading level: <span class="chip" id="read-lvl-chip">Level 1</span> &nbsp;·&nbsp; Score 4 out of 5 or better to level up!</p>
+        <div class="story-grid" id="story-grid"></div>
+      </div>
+    </div>
+
+    <div id="reading-story" style="display:none">
+      <button class="back-link" id="story-back">← Back to library</button>
+      <div class="card">
+        <h2 id="story-title"></h2>
+        <p class="sub" id="story-meta"></p>
+        <div class="story-body" id="story-body"></div>
+        <div class="pager">
+          <button class="pg-btn" id="pg-prev">← Back</button>
+          <span class="pg" id="pg-num"></span>
+          <button class="pg-btn primary" id="pg-next">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reading-quiz" style="display:none">
+      <button class="back-link" id="quiz-back">← Re-read the story</button>
+      <div class="card">
+        <div class="quiz-progress" id="quiz-prog"></div>
+        <div class="question word" id="quiz-q"></div>
+        <div class="choices" id="quiz-choices" style="grid-template-columns:1fr"></div>
+        <div class="feedback" id="quiz-fb"><span id="quiz-fb-txt"></span><span class="pts" id="quiz-fb-pts"></span></div>
+        <button class="next-btn" id="quiz-next">Next question →</button>
+      </div>
+    </div>
+
+    <div id="reading-results" style="display:none">
+      <div class="card results">
+        <div style="font-size:2.5rem">🎉</div>
+        <div class="big" id="res-score"></div>
+        <div class="earned" id="res-pts"></div>
+        <p class="sub" id="res-msg"></p>
+        <button class="pg-btn primary" id="res-home">Back to Story Library</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROGRESS ============ -->
+  <section class="view" id="view-progress">
+    <div class="stat-row" id="stat-row"></div>
+    <div class="card">
+      <h2>Points — last 7 days</h2>
+      <p class="sub">Every day you practice adds a bar. Beat yesterday!</p>
+      <div class="chart-wrap">
+        <svg id="week-chart" width="100%" height="220" role="img" aria-label="Bar chart of points earned each of the last seven days"></svg>
+        <div id="chart-tip"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- word popup -->
+<div id="word-pop">
+  <button class="wp-close" id="wp-close">✕</button>
+  <div><span class="wp-word" id="wp-word"></span><span class="wp-phon" id="wp-phon"></span></div>
+  <button class="wp-say" id="wp-say">🔊 Say it</button>
+  <div class="wp-defs" id="wp-defs"></div>
+</div>
+
+<!-- goal editor -->
+<div id="goal-editor">
+  <div class="ge-card">
+    <h3>Set your daily goal</h3>
+    <p>How many points will you earn today?</p>
+    <input type="number" id="goal-input" min="50" max="5000" step="50">
+    <div class="ge-actions">
+      <button id="goal-cancel">Cancel</button>
+      <button class="save" id="goal-save">Save goal</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Jameson's Point Quest — single-file, no build, no API keys.
+   Math questions are generated in-browser. Stories are baked in.
+   Pronunciation: browser speechSynthesis (offline).
+   Definitions: free dictionaryapi.dev (no key) with offline fallback.
+   All progress saved in localStorage on this device.
+===================================================================== */
+
+/* ---------------- state ---------------- */
+const LS_KEY = 'pointQuest_v1';
+const DEFAULTS = {
+  goal: 300, mathLevel: 1, readLevel: 1,
+  totalPoints: 0, bestStreak: 0,
+  storiesDone: {},           // storyId -> best score
+  days: {}                   // 'YYYY-MM-DD' -> {points, mathC, mathT, readC, readT, goalHit}
+};
+let S;
+try { S = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(LS_KEY) || '{}')); }
+catch (e) { S = Object.assign({}, DEFAULTS); }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(S)); }
+function todayKey(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function day(){
+  const k = todayKey();
+  if (!S.days[k]) S.days[k] = { points:0, mathC:0, mathT:0, readC:0, readT:0, goalHit:false };
+  return S.days[k];
+}
+
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(arr){ return arr[rnd(0,arr.length-1)]; }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=rnd(0,i); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a||1; }
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function flyPoints(pts, x, y){
+  const el = document.createElement('div');
+  el.className = 'fly'; el.textContent = '+' + pts;
+  el.style.left = (x-20)+'px'; el.style.top = (y-20)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1200);
+}
+function confetti(){
+  const colors = ['#2563EB','#F0B429','#2FA968','#7EB0FF','#E8590C'];
+  for (let i=0;i<70;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    const s = rnd(6,12);
+    c.style.cssText = 'left:'+rnd(0,100)+'vw;width:'+s+'px;height:'+(s*0.6)+'px;background:'+pick(colors)+
+      ';animation-duration:'+(rnd(18,32)/10)+'s;animation-delay:'+(rnd(0,8)/10)+'s;border-radius:2px;';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 4200);
+  }
+}
+
+/* ---------------- scoreboard ---------------- */
+function addPoints(pts, evt){
+  const d = day();
+  d.points += pts; S.totalPoints += pts;
+  if (evt){ flyPoints(pts, evt.clientX || innerWidth/2, evt.clientY || innerHeight/2); }
+  if (!d.goalHit && d.points >= S.goal){
+    d.goalHit = true;
+    confetti();
+    toast('🏆 GOAL REACHED! ' + S.goal + ' points today. Amazing work!');
+  }
+  save(); renderScoreboard();
+}
+function renderScoreboard(){
+  const d = day();
+  $('t-today').innerHTML   = d.points + ' <span class="unit">pts</span>';
+  $('t-goal').innerHTML    = S.goal + ' <span class="unit">pts</span>';
+  $('t-alltime').innerHTML = S.totalPoints.toLocaleString() + ' <span class="unit">pts</span>';
+  const pct = Math.min(100, Math.round(d.points / S.goal * 100));
+  $('m-pct').textContent = pct + '%';
+  const fill = $('m-fill');
+  fill.style.width = pct + '%';
+  fill.classList.toggle('done', pct >= 100);
+  $('m-label').textContent = pct >= 100 ? '🏆 Goal reached — keep stacking!' : 'Goal progress';
+}
+
+/* goal editor */
+$('goal-tile').addEventListener('click', ()=>{
+  $('goal-input').value = S.goal;
+  $('goal-editor').classList.add('show');
+  $('goal-input').focus();
+});
+$('goal-cancel').addEventListener('click', ()=>$('goal-editor').classList.remove('show'));
+$('goal-editor').addEventListener('click', e=>{ if(e.target === $('goal-editor')) $('goal-editor').classList.remove('show'); });
+$('goal-save').addEventListener('click', ()=>{
+  const v = parseInt($('goal-input').value, 10);
+  if (v >= 50 && v <= 5000){
+    S.goal = v; day().goalHit = day().points >= v;
+    save(); renderScoreboard();
+    $('goal-editor').classList.remove('show');
+    toast('Daily goal set to ' + v + ' points 💪');
+  }
+});
+
+/* ---------------- tabs ---------------- */
+function switchTab(view){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('view-' + view).classList.add('active');
+  if (view === 'progress') renderProgress();
+  if (view === 'home') renderHome();
+  hideWordPop();
+}
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>switchTab(btn.dataset.view));
+});
+document.querySelectorAll('.launch-card').forEach(btn=>{
+  btn.addEventListener('click', ()=>switchTab(btn.dataset.goto));
+});
+
+/* ---------------- home ---------------- */
+function renderHome(){
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  $('home-greet').textContent = greet + ' — ready to earn some points? ⚡';
+  const d = day();
+  $('home-goal-line').textContent = d.points >= S.goal
+    ? '🏆 You already hit your ' + S.goal + '-point goal today with ' + d.points + ' points. Every point now is pure bonus!'
+    : d.points > 0
+      ? 'You have ' + d.points + ' of ' + S.goal + ' points today — ' + (S.goal - d.points) + ' to go. You’ve got this!'
+      : 'Today’s goal: ' + S.goal + ' points. Pick a challenge below to get started!';
+  $('home-math-sub').textContent = 'Level ' + S.mathLevel + ' · ' + LEVEL_NAMES[S.mathLevel-1] + ' · endless questions';
+  const done = Object.keys(S.storiesDone).length;
+  $('home-read-sub').textContent = 'Reading Level ' + S.readLevel + ' · ' + done + ' of ' + STORIES.length + ' stories finished';
+}
+
+/* =====================================================================
+   MATH — 10 levels of generated questions (infinite supply, $0)
+===================================================================== */
+const LEVEL_NAMES = ['Add & Subtract','Multiply I','Multiply II','Division','Decimals + −',
+  'Fractions I','Fractions II','Decimals × & Order of Ops','Word Problems','Geometry & Percents'];
+
+function numDistractors(ans, n){
+  const set = new Set([ans]);
+  const cands = [ans+1, ans-1, ans+2, ans-2, ans+10, ans-10, ans+100, ans-100, ans+5, ans-5, ans*2];
+  const out = [];
+  let tries = 0;
+  while (out.length < n){
+    tries++;
+    // after 20 random picks fall back to an ever-widening positive range so this always terminates
+    const c = tries <= 20 ? pick(cands) : ans + rnd(1, 12 + tries);
+    if (c > 0 && !set.has(c)){ set.add(c); out.push(c); }
+  }
+  return out;
+}
+function fmtFrac(n, d){
+  const g = gcd(n, d); n/=g; d/=g;
+  if (d === 1) return String(n);
+  if (n > d){ const w = Math.floor(n/d), r = n % d; return r ? (w + ' ' + r + '/' + d) : String(w); }
+  return n + '/' + d;
+}
+function strDistractors(ans, cands){
+  const seen = new Set([ans]); const out = [];
+  for (const c of cands){ if (!seen.has(c)){ seen.add(c); out.push(c); if (out.length === 3) break; } }
+  return out;
+}
+function fracDistractors(n, d, kind){
+  const s = new Set([fmtFrac(n,d)]);
+  const cands = [ fmtFrac(Math.max(1,n+1), d), fmtFrac(Math.max(1,n-1) || 1, d),
+                  n + '/' + d, fmtFrac(n, d*2), fmtFrac(Math.max(1,n), Math.max(2,d-1)) ];
+  if (kind) cands.unshift(kind);
+  const out = [];
+  for (const c of cands){ if (!s.has(c)){ s.add(c); out.push(c); if (out.length === 3) break; } }
+  let bump = 2;
+  while (out.length < 3){ const c = fmtFrac(n + bump, d + bump); bump++; if (!s.has(c)){ s.add(c); out.push(c); } }
+  return out;
+}
+
+const GENERATORS = {
+  1(){ // 3-digit add / subtract
+    const a = rnd(126, 987), b = rnd(114, 878);
+    if (rnd(0,1)){ return { q: a + ' + ' + b + ' = ?', ans: a+b }; }
+    const hi = Math.max(a,b), lo = Math.min(a,b);
+    return { q: hi + ' − ' + lo + ' = ?', ans: hi-lo };
+  },
+  2(){ // 2–3 digit × 1 digit
+    const a = rnd(0,1) ? rnd(13, 98) : rnd(112, 489), b = rnd(3, 9);
+    return { q: a + ' × ' + b + ' = ?', ans: a*b };
+  },
+  3(){ // 2 digit × 2 digit
+    const a = rnd(12, 79), b = rnd(12, 49);
+    return { q: a + ' × ' + b + ' = ?', ans: a*b };
+  },
+  4(){ // division, sometimes with remainder
+    const d = rnd(3, 9), q = rnd(12, 98);
+    if (rnd(0,1)){ return { q: (q*d) + ' ÷ ' + d + ' = ?', ans: q }; }
+    const r = rnd(1, d-1);
+    const ansStr = q + ' R ' + r;
+    return { q: (q*d + r) + ' ÷ ' + d + ' = ?  (quotient and remainder)', ansStr,
+      distractors: [ (q+1)+' R '+r, q+' R '+Math.max(1,(r+1)%d||1), (q-1)+' R '+r ] };
+  },
+  5(){ // decimals add/subtract (money half the time)
+    const a = rnd(150, 4999)/100, b = rnd(120, 3999)/100;
+    const money = rnd(0,1);
+    const f = x => money ? '$' + x.toFixed(2) : x.toFixed(2);
+    if (rnd(0,1)){
+      const ans = +(a+b).toFixed(2);
+      return { q: f(a) + ' + ' + f(b) + ' = ?', ansStr: f(ans),
+        distractors: [ f(+(ans+0.1).toFixed(2)), f(+(ans-0.1).toFixed(2)), f(+(ans+1).toFixed(2)) ] };
+    }
+    const hi = Math.max(a,b), lo = Math.min(a,b), ans = +(hi-lo).toFixed(2);
+    return { q: f(hi) + ' − ' + f(lo) + ' = ?', ansStr: f(ans),
+      distractors: [ f(+(ans+0.1).toFixed(2)), f(Math.max(0.01,+(ans-0.1).toFixed(2))), f(+(ans+1).toFixed(2)) ] };
+  },
+  6(){ // fractions, like denominators + equivalents
+    if (rnd(0,1)){
+      const d = pick([4,5,6,8,10,12]);
+      const a = rnd(1, d-2), b = rnd(1, d-a-1);
+      return { q: a + '/' + d + ' + ' + b + '/' + d + ' = ?  (simplest form)',
+        ansStr: fmtFrac(a+b, d), distractors: fracDistractors(a+b, d, fmtFrac(a+b, 2*d)) };
+    }
+    const base = pick([[1,2],[1,3],[2,3],[3,4],[2,5],[3,5]]);
+    const k = rnd(2,4);
+    const eq = (base[0]*k) + '/' + (base[1]*k);
+    return { q: 'Which fraction is equivalent to ' + base[0] + '/' + base[1] + '?',
+      ansStr: eq,
+      distractors: strDistractors(eq, [ (base[0]*k+1) + '/' + (base[1]*k), (base[0]+k) + '/' + (base[1]+k),
+        base[0] + '/' + (base[1]*k), (base[0]*k) + '/' + (base[1]*k+1), (base[1]*k) + '/' + (base[0]*k+base[1]) ]) };
+  },
+  7(){ // fractions, unlike denominators
+    const pairs = [[2,3],[2,5],[3,4],[3,5],[4,6],[2,4],[4,8],[3,6],[2,6],[4,5]];
+    const [d1,d2] = pick(pairs);
+    const a = rnd(1, d1-1), b = rnd(1, d2-1);
+    const L = d1*d2/gcd(d1,d2);
+    const n = a*(L/d1) + b*(L/d2);
+    return { q: a + '/' + d1 + ' + ' + b + '/' + d2 + ' = ?  (simplest form)',
+      ansStr: fmtFrac(n, L), distractors: fracDistractors(n, L, fmtFrac(a+b, d1+d2)) };
+  },
+  8(){ // decimal × whole, and order of operations
+    if (rnd(0,1)){
+      const a = rnd(11, 99)/10, b = rnd(3, 9);
+      const ans = +(a*b).toFixed(1);
+      return { q: a.toFixed(1) + ' × ' + b + ' = ?', ansStr: ans.toFixed(1),
+        distractors: strDistractors(ans.toFixed(1), [ (a+b).toFixed(1), (ans+1).toFixed(1),
+          Math.max(0.1,ans-1).toFixed(1), (ans+2).toFixed(1), (ans+0.5).toFixed(1) ]) };
+    }
+    const a = rnd(2,9), b = rnd(2,9), c = rnd(2,9);
+    if (rnd(0,1)){
+      return { q: a + ' + ' + b + ' × ' + c + ' = ?', ans: a + b*c, trick: (a+b)*c };
+    }
+    return { q: '(' + a + ' + ' + b + ') × ' + c + ' = ?', ans: (a+b)*c, trick: a + b*c };
+  },
+  9(){ // multi-step word problems
+    const t = rnd(0, 4);
+    if (t === 0){
+      const p = rnd(4, 9), c = rnd(8, 15), g = rnd(3, 12);
+      return { q: 'Jameson buys ' + p + ' packs of trading cards. Each pack has ' + c +
+        ' cards. He gives ' + g + ' cards to his friend. How many cards does he have left?', ans: p*c-g, word: true };
+    }
+    if (t === 1){
+      const cost = rnd(3, 9), n = rnd(3, 6), pay = Math.ceil(cost*n/10)*10 + 10;
+      const chg = '$' + (pay - cost*n);
+      return { q: 'Movie tickets cost $' + cost + ' each. A family buys ' + n +
+        ' tickets and pays with $' + pay + '. How much change do they get?', ansStr: chg, word: true,
+        distractors: strDistractors(chg, [ '$' + (pay - cost*n + 2), '$' + Math.max(1, pay - cost*n - 2),
+          '$' + (cost*n), '$' + (pay - cost*n + 5), '$' + (pay - cost*n + 1) ]) };
+    }
+    if (t === 2){
+      const laps = rnd(4, 8), m = rnd(200, 450);
+      return { q: 'A runner does ' + laps + ' laps of a ' + m + '-meter track every day. How many meters does she run in 3 days?',
+        ans: laps*m*3, word: true };
+    }
+    if (t === 3){
+      const rows = rnd(12, 24), seats = rnd(14, 28), sold = rnd(20, 80);
+      return { q: 'A theater has ' + rows + ' rows with ' + seats + ' seats in each row. If ' + sold +
+        ' seats are empty, how many people are watching the show?', ans: rows*seats - sold, word: true };
+    }
+    const box = rnd(6, 12), per = rnd(18, 36), broken = rnd(4, 15);
+    return { q: 'A store gets ' + box + ' boxes of markers with ' + per + ' markers in each box. ' + broken +
+      ' markers are broken. How many good markers can the store sell?', ans: box*per - broken, word: true };
+  },
+  10(){ // geometry, conversions, percents
+    const t = rnd(0, 3);
+    if (t === 0){
+      const l = rnd(3, 9), w = rnd(2, 8), h = rnd(2, 6);
+      return { q: 'A box is ' + l + ' cm long, ' + w + ' cm wide, and ' + h + ' cm tall.\nWhat is its volume in cubic centimeters?', ans: l*w*h, word: true };
+    }
+    if (t === 1){
+      const l = rnd(6, 15), w = rnd(3, 9);
+      if (rnd(0,1)) return { q: 'A rectangle is ' + l + ' m long and ' + w + ' m wide. What is its AREA in square meters?', ans: l*w, word: true, trick: 2*(l+w) };
+      return { q: 'A rectangle is ' + l + ' m long and ' + w + ' m wide. What is its PERIMETER in meters?', ans: 2*(l+w), word: true, trick: l*w };
+    }
+    if (t === 2){
+      const conv = pick([ ['meters','centimeters',100,rnd(2,9)], ['feet','inches',12,rnd(2,9)],
+                          ['minutes','seconds',60,rnd(2,9)], ['kilograms','grams',1000,rnd(2,6)] ]);
+      return { q: 'How many ' + conv[1] + ' are in ' + conv[3] + ' ' + conv[0] + '?', ans: conv[2]*conv[3], word: true };
+    }
+    const pc = pick([10, 20, 25, 50]);
+    const base = pick([40, 60, 80, 120, 200, 240, 400]);
+    return { q: 'What is ' + pc + '% of ' + base + '?', ans: base*pc/100, word: true, trick: base - base*pc/100 };
+  }
+};
+
+let mathQ = null, mathStreak = 0, mathRunUp = 0, mathRunDown = 0, mathLocked = false;
+
+function newMathQuestion(){
+  const gen = GENERATORS[S.mathLevel];
+  const raw = gen();
+  let answer, choices;
+  if (raw.ansStr !== undefined){
+    answer = raw.ansStr;
+    choices = shuffle([answer].concat(raw.distractors));
+  } else {
+    answer = String(raw.ans);
+    const ds = [];
+    if (raw.trick !== undefined && raw.trick !== raw.ans) ds.push(String(raw.trick));
+    for (const c of numDistractors(raw.ans, 6).map(String)){
+      if (ds.indexOf(c) === -1) ds.push(c);
+      if (ds.length === 3) break;
+    }
+    choices = shuffle([answer].concat(ds));
+  }
+  mathQ = { text: raw.q, answer, choices, word: !!raw.word };
+  mathLocked = false;
+  renderMath();
+}
+function renderMath(){
+  $('math-lvl-chip').textContent = 'Level ' + S.mathLevel + ' · ' + LEVEL_NAMES[S.mathLevel-1];
+  const st = $('math-streak');
+  st.textContent = (mathStreak >= 3 ? '🔥 ' : '') + 'Streak: ' + mathStreak;
+  st.classList.toggle('hot', mathStreak >= 3);
+  const qEl = $('math-q');
+  qEl.textContent = mathQ.text;
+  qEl.classList.toggle('word', mathQ.word);
+  const box = $('math-choices'); box.innerHTML = '';
+  const keys = ['A','B','C','D'];
+  mathQ.choices.forEach((c, i)=>{
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.innerHTML = '<span class="key">' + keys[i] + '</span><span></span>';
+    b.lastElementChild.textContent = c;
+    b.addEventListener('click', e=>answerMath(i, e));
+    box.appendChild(b);
+  });
+  $('math-fb').className = 'feedback';
+  $('math-next').className = 'next-btn';
+}
+function answerMath(i, evt){
+  if (mathLocked) return;
+  mathLocked = true;
+  const btns = document.querySelectorAll('#math-choices .choice');
+  btns.forEach(b=>b.disabled = true);
+  const chosen = mathQ.choices[i];
+  const correct = chosen === mathQ.answer;
+  const d = day();
+  d.mathT++;
+  const fb = $('math-fb');
+  if (correct){
+    d.mathC++;
+    btns[i].classList.add('correct');
+    mathStreak++; mathRunUp++; mathRunDown = 0;
+    if (mathStreak > S.bestStreak) S.bestStreak = mathStreak;
+    let pts = 10 + (S.mathLevel-1)*5;
+    if (mathStreak >= 3) pts += 10;
+    $('math-fb-txt').textContent = pick(['✅ Correct!','✅ Nailed it!','✅ Yes! Great work!','✅ That’s right!']);
+    $('math-fb-pts').textContent = '+' + pts + ' pts' + (mathStreak >= 3 ? ' (🔥 streak bonus!)' : '');
+    fb.className = 'feedback show ok';
+    addPoints(pts, evt);
+    if (mathRunUp >= 3 && S.mathLevel < 10){
+      S.mathLevel++; mathRunUp = 0;
+      toast('⬆️ LEVEL UP! Now on Level ' + S.mathLevel + ': ' + LEVEL_NAMES[S.mathLevel-1]);
+    }
+  } else {
+    btns[i].classList.add('wrong');
+    btns.forEach((b, j)=>{ if (mathQ.choices[j] === mathQ.answer) b.classList.add('correct'); });
+    mathStreak = 0; mathRunUp = 0; mathRunDown++;
+    $('math-fb-txt').textContent = '✗ Not quite — the answer is ' + mathQ.answer + '.';
+    $('math-fb-pts').textContent = '';
+    fb.className = 'feedback show no';
+    if (mathRunDown >= 2 && S.mathLevel > 1){
+      S.mathLevel--; mathRunDown = 0;
+      toast('Let’s build back up — Level ' + S.mathLevel + ': ' + LEVEL_NAMES[S.mathLevel-1]);
+    }
+  }
+  save(); renderScoreboard();
+  const st = $('math-streak');
+  st.textContent = (mathStreak >= 3 ? '🔥 ' : '') + 'Streak: ' + mathStreak;
+  st.classList.toggle('hot', mathStreak >= 3);
+  $('math-next').classList.add('show');
+  $('math-next').focus();
+}
+$('math-next').addEventListener('click', newMathQuestion);
+
+/* =====================================================================
+   READING — stories baked into the file (no API)
+===================================================================== */
+const STORIES = [
+{
+  id:'skateboard', level:1, title:'The Missing Skateboard', genre:'Mystery',
+  pages:[
+`Marcus had saved his allowance for six whole months to buy the blue skateboard in the window of Rolly's Sport Shop. It had lightning-bolt wheels and grip tape that sparkled like a night sky. Every Saturday morning he rode it to Pinewood Park, practiced his ollies until his legs ached, and rolled home just in time for lunch.
+
+But this Saturday, when Marcus lifted the garage door, the spot next to his dad's red toolbox was empty. The skateboard was gone. His stomach dropped. He checked behind the recycling bins, under the workbench, and even inside the old refrigerator box in the corner. Nothing.`,
+`"Mom!" Marcus called, running into the kitchen. "Did you move my skateboard?"
+
+His mom looked up from her coffee and shook her head. "I haven't touched it, honey. Did you leave it at the park?"
+
+"No way. I always put it back in the same spot." Marcus turned to his little sister, Dana, who was eating cereal at the counter. "Dana, have you seen my board?"
+
+Dana stared down into her bowl very, very hard. "Nope," she said quietly. But Marcus noticed something strange — her cheeks were turning as red as the strawberries on the table.`,
+`Marcus walked back to the garage, thinking hard. That's when he spotted them: thin, muddy wheel tracks on the driveway, heading toward the backyard. He followed them across the wet grass, past the garden hose, all the way to the big oak tree — and the wooden treehouse he and his dad had built two summers ago.
+
+Marcus climbed the ladder. When he poked his head through the door, his mouth fell open. There was his skateboard, lying in the middle of the floor. But it looked... different. It was surrounded by markers, sticker sheets, and glitter glue.`,
+`"SURPRISE!" Dana's head appeared in the doorway behind him, and her words came out in a rush. "I know it's not until tomorrow, but I wanted to decorate your skateboard for your birthday, with lightning stickers because you love lightning, and I was going to put it back before you woke up, but the stickers took FOREVER."
+
+Marcus looked at the board again. Dana had lined the edges with tiny lightning bolts, each one placed with great care. His anger melted away like an ice cube in July.
+
+"Next time, ask me first," he said, and then he grinned. "But this looks awesome. Want to come to the park? You can ride your scooter." Dana whooped so loudly that birds scattered from the oak tree.`
+  ],
+  questions:[
+    { q:'Why did Marcus go to the garage at the beginning of the story?',
+      opts:['To help his dad find the toolbox','To get his skateboard for his Saturday ride','To look for his sister Dana','To clean out the refrigerator box'], a:1 },
+    { q:'What clue told Marcus that Dana might know something about the skateboard?',
+      opts:['She was riding her scooter in the garage','She told him to check the treehouse','Her cheeks turned red and she stared at her bowl','She had glitter glue on her hands'], a:2 },
+    { q:'How did Marcus figure out where the skateboard was?',
+      opts:['He followed muddy wheel tracks across the yard','His mom told him where to look','He heard Dana in the treehouse','He found a note on the workbench'], a:0 },
+    { q:'Why did Dana take the skateboard without asking?',
+      opts:['She wanted to learn to ride it','She was mad at Marcus','She wanted to sell it at the park','She was decorating it as a birthday surprise'], a:3 },
+    { q:'In the story, "his stomach dropped" means Marcus suddenly felt —',
+      opts:['hungry for lunch','worried and upset','sick from breakfast','excited and happy'], a:1 }
+  ]
+},
+{
+  id:'luna', level:1, title:'Luna the Library Cat', genre:'Realistic Fiction',
+  pages:[
+`Everyone in the town of Maple Falls knew Luna, the gray cat who lived at the public library. Every afternoon she curled up on the round blue rug in the story corner, right where a wide sunbeam fell through the front window. Kids read out loud to her, and Luna purred like a tiny motor, which the librarian, Ms. Chen, said meant "keep going, you're doing great."
+
+Then, one Monday in March, workers arrived with ladders and paint cans. The library was getting a renovation — new shelves, new paint, and new carpet. And that very week, Luna disappeared.`,
+`The kids were worried. Ava and her friends made posters with Luna's picture and taped them by the checkout desk. Ms. Chen left out Luna's favorite salmon treats, but each morning the treats sat untouched.
+
+On Thursday, Ava sat in the story corner and noticed something. The corner felt different — darker. The workers had moved the tall bookshelves in front of the big window while they painted, and the wide, warm sunbeam was gone. Ava thought about all the afternoons she had read to Luna. The cat never really cared about the rug, she realized. Luna cared about the sunshine.`,
+`"If I were a cat," Ava whispered, "I would follow the sun." She walked through the library, checking every window. Upstairs, in the quiet history section, a brand-new skylight had just been installed. A big square of golden light lay on the floor beneath it — and in the middle of it, curled up like a cinnamon roll, was Luna.
+
+Ava laughed so hard she had to cover her mouth. That afternoon, Ms. Chen moved Luna's bed upstairs to the sunny spot, and taped a new sign by the stairs: STORY TIME HAS MOVED — FOLLOW THE SUN. The kids did, and Luna purred louder than ever.`
+  ],
+  questions:[
+    { q:'What is this story mostly about?',
+      opts:['How libraries get renovated','A cat who ran away from town','Figuring out why a library cat moved to a new spot','Teaching a cat to do tricks'], a:2 },
+    { q:'Why did Luna stop sleeping in the story corner?',
+      opts:['The shelves blocked the window and her sunbeam was gone','Too many kids were reading out loud','Ms. Chen moved her bed upstairs','The new carpet smelled like paint'], a:0 },
+    { q:'What did Ava notice that helped her solve the mystery?',
+      opts:['Muddy paw prints on the stairs','Luna always napped where the sunlight landed','The salmon treats were missing','The workers left a window open'], a:1 },
+    { q:'In this story, a "renovation" is —',
+      opts:['a kind of library book','a party for the whole town','a cat’s favorite napping spot','fixing up and improving a building'], a:3 },
+    { q:'What will most likely happen after the story ends?',
+      opts:['Luna will disappear again','Kids will read to Luna in the sunny spot upstairs','The library will close for good','Ms. Chen will give Luna away'], a:1 }
+  ]
+},
+{
+  id:'volcano', level:2, title:'The Volcano That Wouldn’t Erupt', genre:'Realistic Fiction',
+  pages:[
+`Priya had tested her science-fair volcano four times at home, and four times it had erupted beautifully — a hissing tower of orange foam that oozed down the painted clay sides like real lava. Her little brother had applauded every single time. So on Friday morning, as she set up her display in the school gym between a solar-system mobile and a potato battery, she wasn't nervous at all.
+
+At nine o'clock sharp, the judges arrived at her table. Priya smiled, poured the vinegar into the crater, and stepped back.
+
+Nothing happened.
+
+A weak fizz bubbled at the top, sighed, and died. One judge made a small note on her clipboard. "We'll circle back," she said kindly, and the group moved on to the potato battery.`,
+`Priya's face burned. Part of her wanted to shove the whole volcano into the trash can. Instead, she took a slow breath and did what her grandfather, a retired chemist, had taught her: "When an experiment fails, don't get mad — get curious. Something was different. Find it."
+
+She pulled out her notebook and listed everything about her tests at home. Warm kitchen. Vinegar from the cupboard. A big squirt of dish soap to make the foam thick and tall. Then she looked at her supplies on the gym table and her eyes went wide. The school's vinegar had been stored in the icy cold supply room overnight. And her bottle of dish soap was still sitting on the kitchen counter at home. She had forgotten it completely.`,
+`Priya raised her hand and explained the problem to Mr. Watts, the science teacher. He warmed the vinegar bottle in a bowl of hot water from the teachers' lounge and found a bottle of dish soap in the janitor's closet. While she waited, Priya wrote two new lines in her notebook: "Cold slows the reaction. No soap, no foam."
+
+When the judges circled back after lunch, Priya didn't just pour and hope. First she explained what had gone wrong in the morning, showed them her notebook, and described how she'd tracked down both problems. Then she poured the warm vinegar. The volcano roared to life, foam surging over the crater's edge, and the crowd around her table burst into applause.`,
+`Priya did not win first place — the potato battery took that ribbon. But at the awards ceremony, the head judge called her name for a special prize: "Best Scientific Thinking."
+
+"Plenty of students showed us experiments that worked," the judge said. "Priya showed us what a scientist does when an experiment doesn't."
+
+That night, Priya taped the ribbon above her desk and called her grandfather. "It erupted on the second try," she told him.
+
+"Of course it did," he chuckled. "Experiments fail all the time. Scientists ask why."`
+  ],
+  questions:[
+    { q:'Why didn’t the volcano erupt properly the first time?',
+      opts:['Priya used water instead of vinegar','Priya poured too fast and it spilled','The clay volcano had a crack in it','The vinegar was cold and Priya forgot the dish soap'], a:3 },
+    { q:'What did Priya do right after the failed eruption?',
+      opts:['She listed what was different from her tests at home','She asked the judges for a second chance right away','She threw the volcano in the trash','She borrowed the potato battery'], a:0 },
+    { q:'Which word best describes Priya in this story?',
+      opts:['jealous','persistent','careless','shy'], a:1 },
+    { q:'Why were the judges so impressed with Priya?',
+      opts:['Her volcano was the biggest at the fair','She explained how she found and fixed the problem','She helped the other students set up','Her eruption was louder than everyone else’s'], a:1 },
+    { q:'Her grandfather’s advice, "don’t get mad — get curious," means —',
+      opts:['never enter a science fair twice','anger helps you work faster','when something fails, investigate the reason','always ask a teacher to fix your project'], a:2 }
+  ]
+},
+{
+  id:'creek', level:2, title:'The Secret of Miller’s Creek', genre:'Adventure',
+  pages:[
+`The twins knew Miller's Creek better than anyone. Jack could name every fish that flickered through its riffles, and Rosa kept a waterproof notebook of everything they saw. All spring, the creek behind their neighborhood had been perfect — cold, clear, and busy with minnows.
+
+Then, in the second week of June, things changed. The water turned cloudy, like weak chocolate milk. The minnows that usually crowded the shallows had vanished. On Saturday morning, Rosa knelt on the flat rock by the crossing log and frowned at her notebook. "Three weeks ago I counted forty minnows right here," she said. "Today? Zero."
+
+"Something's wrong upstream," Jack said. "Water carries its problems downhill. Let's go find out."`,
+`They followed the creek up through the cottonwoods, past the ballfield, checking the water as they went. Behind the ballfield the creek ran clear again — for a while. But when they climbed the bank near Ash Street, Rosa spotted it: a lazy swirl of soap suds turning in an eddy, and a faint rainbow shine on the surface.
+
+Just uphill, in the middle school parking lot, a big banner read CAR WASH TODAY — SUPPORT THE 8TH GRADE TRIP! A dozen students in soaked T-shirts were scrubbing a line of cars, and gray, soapy water was streaming across the pavement and pouring into a storm drain at the curb.
+
+"There it is," Jack said. "But how does water from a parking lot drain end up in our creek?"`,
+`Rosa knew, because she had done a report on it in April. "Storm drains aren't like the drains in your house," she explained as they walked toward the car wash. "Sink water goes to a treatment plant and gets cleaned. Storm drains skip all that — they empty straight into creeks and rivers. Whatever goes in comes out at the creek. Soap, oil, everything."
+
+The eighth graders were friendly, and their teacher, Ms. Alvarez, came over to listen. When Rosa showed her the notebook — the minnow counts, the dates, the photo of the suds — Ms. Alvarez's eyebrows went up. "We had no idea," she said. "We thought the water just... went away."
+
+"Everything goes somewhere," Rosa said.`,
+`The next Saturday, the car wash moved to the grassy lot beside the school, where the ground could soak up and filter the water instead of funneling it to the creek. Ms. Alvarez even made it a science lesson, and two eighth graders painted a small blue fish next to the storm drain with the words DRAINS TO CREEK.
+
+By the end of July, Miller's Creek ran cold and clear again. Rosa knelt on the flat rock and counted thirty-seven minnows in the shallows while Jack whooped from the crossing log. That week, the town newspaper ran a photo of the twins under a headline Rosa taped into the back of her notebook: TWO KIDS, ONE NOTEBOOK, ONE CLEAN CREEK.`
+  ],
+  questions:[
+    { q:'What problem did the twins discover at the beginning of the story?',
+      opts:['The crossing log had washed away','The creek was cloudy and the minnows were gone','The ballfield was flooded','Someone had taken Rosa’s notebook'], a:1 },
+    { q:'What evidence helped convince Ms. Alvarez there was a real problem?',
+      opts:['Rosa’s notebook with minnow counts, dates, and a photo','A warning letter from the town','Jack’s collection of fish','A TV news report about the creek'], a:0 },
+    { q:'According to the story, why are storm drains a problem for creeks?',
+      opts:['They make the water too cold for fish','They are too small to carry rainwater','They empty into creeks without any cleaning or treatment','They are always full of leaves'], a:2 },
+    { q:'How was the problem solved?',
+      opts:['The creek was closed for the summer','The eighth graders canceled their trip','The town built a new treatment plant','The car wash moved to a grassy lot so the ground could filter the water'], a:3 },
+    { q:'What does Rosa mean by "everything goes somewhere"?',
+      opts:['Water you pour out doesn’t disappear — it ends up in a real place','Lost things always turn up eventually','Fish migrate to new creeks every summer','Everyone should travel more'], a:0 }
+  ]
+},
+{
+  id:'clockmaker', level:3, title:'The Clockmaker’s Apprentice', genre:'Historical Fiction',
+  pages:[
+`In the autumn of 1892, Eliza Hart swept floors in the workshop of Mr. Abernathy, the finest clockmaker in Cedar County. She was paid two coins a week and given one rule, repeated so often she heard it in her sleep: "Touch nothing on the workbench."
+
+So Eliza touched nothing. But no one had made a rule about watching. Each day, as her broom whispered across the floorboards, her eyes followed the old man's hands — how he laid out his tools smallest to largest, how he cleaned each gear with a wisp of cotton, how he leaned close to listen to a clock's tick the way a doctor listens to a heartbeat. At night, in the room she shared with her two sisters, she drew what she remembered: mainsprings and gear trains, and the delicate escapement — the tiny rocking part that lets a clock's power escape one even tick at a time.`,
+`One gray morning in October, the mayor himself burst into the shop. The great tower clock at the courthouse had stopped, and the Harvest Festival — the biggest day of the year — was two days away. "The whole county sets its watches by that clock," the mayor said. "It must ring on festival morning."
+
+"It will," said Mr. Abernathy.
+
+But Eliza, sweeping in the corner, saw what the mayor did not. The clockmaker's hands, so sure and steady on the workbench, had lately begun to tremble — just a little, the way a leaf shivers before a storm. She had watched him set aside his finest work, the tiniest screws and thinnest springs, again and again that fall. He was proud, and he was growing old, and the courthouse clock was four stories up a cold stone tower.`,
+`They climbed the tower together the next evening, Eliza carrying the toolbox and a lantern. Inside the clock room, gears taller than wagon wheels stood frozen mid-turn. Mr. Abernathy found the trouble quickly: the escapement, clogged with years of dust and grit, its anchor pivot held by a screw smaller than a grain of rice.
+
+Three times he reached in with his slender screwdriver. Three times his trembling fingers slipped. The old man sat back on the wooden stool and stared at his hands as if they belonged to a stranger. For a long moment, the only sound in the tower was the wind.
+
+"Sir," Eliza said quietly, "I can do it."`,
+`Mr. Abernathy turned. "You are a girl who sweeps floors."
+
+"Yes, sir. And for two years I have watched you. The anchor pivot wants a quarter turn, no more, or the escapement binds. You clean the pallets with cotton, never cloth, because cloth leaves threads. You always oil the pivot last, one drop, because oil gathers dust." The words tumbled out of her like coins from a purse.
+
+The clockmaker was silent. Then, slowly, he began to ask her questions — hard ones, about gear ratios and pendulum lengths, about what a slow tick means and what a shallow one means. Eliza answered every one. At last, he placed the screwdriver in her small, steady hand.
+
+"Then show me, apprentice," he said.
+
+Her hands did not tremble. The quarter turn. The cotton. The single drop of oil.`,
+`On festival morning, the whole county gathered in the square below the courthouse. At the first light of dawn, the great clock shuddered, ticked — and rang, seven perfect strokes that rolled out over the rooftops like a promise kept. The crowd cheered, and the mayor shook Mr. Abernathy's hand.
+
+But the old clockmaker held up his palm for quiet. "The clock was mended," he announced, "by my apprentice, Miss Eliza Hart," and Eliza, standing at the foot of the tower with the toolbox still in her arms, felt her heart ring louder than the bells.
+
+Years later, when her own sign hung over her own shop — E. HART, CLOCKMAKER — she gave every new sweeper the same two rules. The first: touch nothing on the workbench. The second, which she always delivered with a smile: watch everything.`
+  ],
+  questions:[
+    { q:'Where and when does this story take place?',
+      opts:['A modern city watch store','A clockmaker’s shop in the countryside in 1892','A courthouse in the 1990s','A castle tower in ancient times'], a:1 },
+    { q:'How did Eliza learn the skills of clockmaking?',
+      opts:['She read Mr. Abernathy’s books in secret','Mr. Abernathy gave her lessons after work','She carefully watched Mr. Abernathy for two years and drew what she saw','Her sisters taught her at home'], a:2 },
+    { q:'Why couldn’t Mr. Abernathy fix the escapement himself?',
+      opts:['His hands had begun to tremble with age','He couldn’t climb the tower stairs','He had never repaired a tower clock before','He forgot to bring the right tools'], a:0 },
+    { q:'Why did Mr. Abernathy ask Eliza hard questions before letting her touch the clock?',
+      opts:['He wanted to stall until morning','He was testing whether she truly understood the work','He hoped she would give up and go home','It was a rule set by the mayor'], a:1 },
+    { q:'Based on the story, an "apprentice" is someone who —',
+      opts:['owns a shop in a small town','fixes only tower clocks','sweeps floors for two coins a week','learns a skilled trade from an expert'], a:3 },
+    { q:'What is the main theme (lesson) of this story?',
+      opts:['Old clocks are better than new ones','Never trust someone who sweeps floors','Paying close attention is a powerful way to learn','Festivals are the best day of the year'], a:2 }
+  ]
+},
+{
+  id:'octopus', level:3, title:'Escape Artists of the Deep: The Octopus', genre:'Nonfiction',
+  pages:[
+`If you designed an alien for a movie, you could hardly do better than the octopus. It has three hearts. Its blood is blue, not red, because it carries oxygen with copper instead of iron. It has no bones at all — not one — which means a fifty-pound octopus can squeeze its entire body through a gap the size of a coin. The only hard part of an octopus is its beak, shaped like a parrot's. If the beak fits through a hole, the rest of the animal will follow.
+
+Scientists call octopuses cephalopods, a word that comes from Greek and means "head-foot." One look explains the name: eight arms sprout directly from a soft, sack-shaped head. But the strangest thing about the octopus is not how it looks. It is how it thinks.`,
+`An octopus is a master of disguise. Its skin is packed with millions of tiny color-changing cells called chromatophores. Each one is like a microscopic balloon of pigment that the octopus can stretch open or squeeze shut. By controlling them all at once, an octopus can completely change its color and pattern in less than one second — faster than you can blink twice.
+
+And it doesn't stop at color. An octopus can raise bumps and spikes on its skin to copy the texture of coral, sand, or seaweed. One species, the mimic octopus of Indonesia, goes even further: it impersonates other animals, flattening itself to glide like a poisonous sole fish or trailing its arms to look like a venomous sea snake. Predators looking for an octopus dinner swim right past.`,
+`How smart is an octopus? Consider the evidence. In laboratories, octopuses have learned to unscrew jar lids from the inside to free themselves. In the wild, veined octopuses collect coconut shell halves, carry them across the sea floor, and snap them shut around their bodies like armor — one of the few known examples of an invertebrate using tools.
+
+Then there is Inky. In 2016, at the National Aquarium of New Zealand, a male octopus named Inky noticed that the lid of his tank had been left slightly open after maintenance. That night, he climbed out, slid across the floor, and disappeared into a narrow drainpipe — one that happened to lead straight to the Pacific Ocean. Keepers found only a wet trail the next morning. Inky was never seen again.`,
+`Perhaps the strangest fact of all: most of an octopus's thinking doesn't happen in its head. About two-thirds of its five hundred million neurons — the cells that carry thoughts and signals — are located in its arms. In a real sense, each arm can taste, touch, and even make simple decisions on its own, like eight curious assistants reporting back to headquarters.
+
+For all their talents, octopuses live short lives — most survive only one to five years. That brief lifespan makes their intelligence even more remarkable: everything an octopus knows, it learned quickly, on its own, with no parent to teach it. Researchers who study them say the octopus is the closest thing we have to meeting an intelligent being from another world — and it has been living in our oceans all along.`
+  ],
+  questions:[
+    { q:'What is the main purpose of this article?',
+      opts:['To convince readers to keep octopuses as pets','To describe what makes octopuses unusual and intelligent','To explain how aquariums are built','To tell the life story of one famous octopus'], a:1 },
+    { q:'Why can an octopus squeeze through a gap the size of a coin?',
+      opts:['Its body is made mostly of water','It has three hearts pumping together','It has no bones — only its beak is hard','Its arms can unscrew tight spaces'], a:2 },
+    { q:'What do chromatophores allow an octopus to do?',
+      opts:['Breathe underwater with copper blood','Change its color and pattern in under a second','Taste food with its arms','Squeeze through small openings'], a:1 },
+    { q:'Why does the author include the story of Inky?',
+      opts:['It is evidence of how clever octopuses can be','It shows that aquariums are unsafe for visitors','It proves octopuses can live in drainpipes','It explains why octopuses have short lives'], a:0 },
+    { q:'The article says two-thirds of an octopus’s neurons are in its arms. This helps explain why —',
+      opts:['octopuses have blue blood','each arm can sense and react on its own','octopuses only live a few years','the mimic octopus lives in Indonesia'], a:1 },
+    { q:'Which of these is an OPINION rather than a fact from the article?',
+      opts:['Octopuses have three hearts','The veined octopus carries coconut shells','You could hardly design a better movie alien than the octopus','Inky escaped through a drainpipe in 2016'], a:2 }
+  ]
+}
+];
+
+let curStory = null, curPage = 0, quizIdx = 0, quizCorrect = 0, quizPts = 0, quizLocked = false;
+
+function renderStoryList(){
+  $('read-lvl-chip').textContent = 'Level ' + S.readLevel;
+  const grid = $('story-grid'); grid.innerHTML = '';
+  const sorted = STORIES.slice().sort((a,b)=>{
+    const ra = Math.abs(a.level - S.readLevel), rb = Math.abs(b.level - S.readLevel);
+    return ra - rb || a.level - b.level;
+  });
+  sorted.forEach(st=>{
+    const done = S.storiesDone[st.id];
+    const card = document.createElement('button');
+    card.className = 'story-card';
+    card.innerHTML =
+      '<span class="lvl-dots">' + [1,2,3].map(i=>'<i class="'+(i<=st.level?'on':'')+'"></i>').join('') + '</span>' +
+      ' <span class="meta"> Level ' + st.level + ' · ' + st.genre + ' · ' + st.pages.length + ' pages</span>' +
+      '<h3></h3>' +
+      (done ? '<span class="done-badge">✓ Best: ' + done + '/' + st.questions.length + ' — read again for more points!</span>'
+            : '<span class="meta">' + st.questions.length + ' questions · up to ' + (st.questions.length*(10+st.level*10)+25) + ' pts</span>');
+    card.querySelector('h3').textContent = st.title;
+    card.addEventListener('click', ()=>openStory(st.id));
+    grid.appendChild(card);
+  });
+}
+function showReadingScreen(which){
+  ['reading-home','reading-story','reading-quiz','reading-results'].forEach(id=>{
+    $(id).style.display = (id === which) ? '' : 'none';
+  });
+  hideWordPop();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function openStory(id){
+  curStory = STORIES.find(s=>s.id===id);
+  curPage = 0;
+  $('story-title').textContent = curStory.title;
+  $('story-meta').textContent = 'Level ' + curStory.level + ' · ' + curStory.genre +
+    ' · 💡 Right-click (or press & hold) any word to hear it and see its meaning';
+  renderPage();
+  showReadingScreen('reading-story');
+}
+function renderPage(){
+  const body = $('story-body');
+  body.innerHTML = '';
+  curStory.pages[curPage].split('\n\n').forEach(par=>{
+    const p = document.createElement('p'); p.textContent = par; body.appendChild(p);
+  });
+  $('pg-num').textContent = 'Page ' + (curPage+1) + ' of ' + curStory.pages.length;
+  $('pg-prev').disabled = curPage === 0;
+  $('pg-next').textContent = curPage === curStory.pages.length-1 ? 'Answer the questions →' : 'Next →';
+}
+$('pg-prev').addEventListener('click', ()=>{ if(curPage>0){curPage--; renderPage(); window.scrollTo({top:0});} });
+$('pg-next').addEventListener('click', ()=>{
+  if (curPage < curStory.pages.length-1){ curPage++; renderPage(); window.scrollTo({top:0}); }
+  else startQuiz();
+});
+$('story-back').addEventListener('click', ()=>showReadingScreen('reading-home'));
+$('quiz-back').addEventListener('click', ()=>{ curPage = 0; renderPage(); showReadingScreen('reading-story'); });
+$('res-home').addEventListener('click', ()=>{ renderStoryList(); showReadingScreen('reading-home'); });
+
+function startQuiz(){
+  quizIdx = 0; quizCorrect = 0; quizPts = 0;
+  renderQuizQ();
+  showReadingScreen('reading-quiz');
+}
+function renderQuizQ(){
+  quizLocked = false;
+  const qz = curStory.questions[quizIdx];
+  $('quiz-prog').textContent = curStory.title + ' — Question ' + (quizIdx+1) + ' of ' + curStory.questions.length;
+  $('quiz-q').textContent = qz.q;
+  const box = $('quiz-choices'); box.innerHTML = '';
+  const keys = ['A','B','C','D'];
+  qz.opts.forEach((opt,i)=>{
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.innerHTML = '<span class="key">' + keys[i] + '</span><span></span>';
+    b.lastElementChild.textContent = opt;
+    b.addEventListener('click', e=>answerQuiz(i, e));
+    box.appendChild(b);
+  });
+  $('quiz-fb').className = 'feedback';
+  $('quiz-next').className = 'next-btn';
+}
+function answerQuiz(i, evt){
+  if (quizLocked) return;
+  quizLocked = true;
+  const qz = curStory.questions[quizIdx];
+  const btns = document.querySelectorAll('#quiz-choices .choice');
+  btns.forEach(b=>b.disabled = true);
+  const d = day();
+  d.readT++;
+  const fb = $('quiz-fb');
+  if (i === qz.a){
+    d.readC++; quizCorrect++;
+    btns[i].classList.add('correct');
+    const pts = 10 + curStory.level*10;
+    quizPts += pts;
+    $('quiz-fb-txt').textContent = pick(['✅ Correct!','✅ Great reading!','✅ You got it!']);
+    $('quiz-fb-pts').textContent = '+' + pts + ' pts';
+    fb.className = 'feedback show ok';
+    addPoints(pts, evt);
+  } else {
+    btns[i].classList.add('wrong');
+    btns[qz.a].classList.add('correct');
+    $('quiz-fb-txt').textContent = '✗ Not this time — the answer was ' + ['A','B','C','D'][qz.a] + '.';
+    $('quiz-fb-pts').textContent = '';
+    fb.className = 'feedback show no';
+    save(); renderScoreboard();
+  }
+  $('quiz-next').textContent = quizIdx === curStory.questions.length-1 ? 'See my results →' : 'Next question →';
+  $('quiz-next').classList.add('show');
+  $('quiz-next').focus();
+}
+$('quiz-next').addEventListener('click', ()=>{
+  if (quizIdx < curStory.questions.length-1){ quizIdx++; renderQuizQ(); }
+  else finishStory();
+});
+function finishStory(){
+  const total = curStory.questions.length;
+  let bonus = 0;
+  if (quizCorrect === total){ bonus = 25; addPoints(25); }
+  const prevBest = S.storiesDone[curStory.id] || 0;
+  if (quizCorrect > prevBest) S.storiesDone[curStory.id] = quizCorrect;
+
+  let msg;
+  const pct = quizCorrect/total;
+  if (pct >= 0.8 && curStory.level >= S.readLevel && S.readLevel < 3){
+    S.readLevel = Math.min(3, curStory.level + 1);
+    msg = '⬆️ You leveled up to Reading Level ' + S.readLevel + '! Harder stories are ready for you.';
+  } else if (pct >= 0.8){
+    msg = 'Outstanding comprehension. Try a Level ' + Math.min(3, curStory.level+1) + ' story next!';
+  } else if (pct >= 0.6){
+    msg = 'Solid work! Re-read the tricky parts and try again for a perfect score.';
+  } else {
+    msg = 'Good effort! Reading the story one more time will make these questions much easier.';
+  }
+  save();
+  $('res-score').textContent = quizCorrect + ' / ' + total;
+  $('res-pts').textContent = '+' + (quizPts + bonus) + ' points earned' + (bonus ? ' (includes +25 PERFECT bonus!)' : '');
+  $('res-msg').textContent = msg;
+  if (quizCorrect === total) confetti();
+  showReadingScreen('reading-results');
+}
+
+/* =====================================================================
+   WORD POPUP — right-click / long-press a word in the story
+   Pronunciation: speechSynthesis (built into the browser, offline, free)
+   Definition: dictionaryapi.dev (free, no key) with offline fallback
+===================================================================== */
+function wordAtPoint(x, y){
+  let range = null;
+  if (document.caretRangeFromPoint){
+    range = document.caretRangeFromPoint(x, y);
+  } else if (document.caretPositionFromPoint){
+    const pos = document.caretPositionFromPoint(x, y);
+    if (pos){ range = document.createRange(); range.setStart(pos.offsetNode, pos.offset); }
+  }
+  if (!range || range.startContainer.nodeType !== 3) return null;
+  const text = range.startContainer.textContent;
+  let i = range.startOffset;
+  const isW = c => /[A-Za-z’'-]/.test(c);
+  if (i >= text.length || !isW(text[i])){
+    if (i > 0 && isW(text[i-1])) i--;
+    else return null;
+  }
+  let s = i, e = i;
+  while (s > 0 && isW(text[s-1])) s--;
+  while (e < text.length && isW(text[e])) e++;
+  const w = text.slice(s, e).replace(/^[’'-]+|[’'-]+$/g, '');
+  return w.length > 1 ? w : null;
+}
+function showWordPop(word, x, y){
+  const pop = $('word-pop');
+  $('wp-word').textContent = word.toLowerCase();
+  $('wp-phon').textContent = '';
+  $('wp-defs').innerHTML = '<p style="color:var(--ink-3)">Looking it up…</p>';
+  pop.classList.add('show');
+  const pw = Math.min(320, innerWidth - 24);
+  let left = Math.min(Math.max(12, x - pw/2), innerWidth - pw - 12);
+  let top = y + 14;
+  if (top + 230 > innerHeight) top = Math.max(12, y - 240);
+  pop.style.left = left + 'px'; pop.style.top = top + 'px';
+
+  const clean = word.toLowerCase().replace(/[’']s$/, '');
+  fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(clean))
+    .then(r => { if (!r.ok) throw new Error('nf'); return r.json(); })
+    .then(data=>{
+      if ($('wp-word').textContent !== word.toLowerCase()) return; // stale
+      const entry = data[0];
+      if (entry.phonetic) $('wp-phon').textContent = entry.phonetic;
+      const defs = $('wp-defs'); defs.innerHTML = '';
+      (entry.meanings || []).slice(0, 2).forEach(m=>{
+        const def = m.definitions && m.definitions[0];
+        if (!def) return;
+        const p = document.createElement('p');
+        const pos = document.createElement('span');
+        pos.className = 'pos'; pos.textContent = m.partOfSpeech + ' — ';
+        p.appendChild(pos);
+        p.appendChild(document.createTextNode(def.definition));
+        if (def.example){
+          const ex = document.createElement('span');
+          ex.style.color = 'var(--ink-3)';
+          ex.textContent = ' “' + def.example + '”';
+          p.appendChild(ex);
+        }
+        defs.appendChild(p);
+      });
+      if (!defs.children.length) defs.innerHTML = '<p>No definition found — tap 🔊 to hear it.</p>';
+    })
+    .catch(()=>{
+      if ($('wp-word').textContent !== word.toLowerCase()) return;
+      $('wp-defs').innerHTML = '<p>Couldn’t load the definition (needs internet). Tap 🔊 to hear the word.</p>';
+    });
+}
+function hideWordPop(){ $('word-pop').classList.remove('show'); }
+$('wp-close').addEventListener('click', hideWordPop);
+$('wp-say').addEventListener('click', ()=>{
+  const w = $('wp-word').textContent;
+  if (!('speechSynthesis' in window)){ toast('This browser can’t speak — try Chrome or Edge.'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(w);
+  u.rate = 0.7; u.lang = 'en-US';
+  const v = speechSynthesis.getVoices().find(v=>v.lang && v.lang.startsWith('en'));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+});
+if ('speechSynthesis' in window) speechSynthesis.getVoices(); // warm the voice list
+
+const storyBody = $('story-body');
+storyBody.addEventListener('contextmenu', e=>{
+  const w = wordAtPoint(e.clientX, e.clientY);
+  if (w){ e.preventDefault(); showWordPop(w, e.clientX, e.clientY); }
+});
+let pressTimer = null, pressXY = null;
+storyBody.addEventListener('touchstart', e=>{
+  const t = e.touches[0];
+  pressXY = { x: t.clientX, y: t.clientY };
+  pressTimer = setTimeout(()=>{
+    const w = wordAtPoint(pressXY.x, pressXY.y);
+    if (w) showWordPop(w, pressXY.x, pressXY.y);
+  }, 550);
+}, {passive:true});
+storyBody.addEventListener('touchmove', e=>{
+  const t = e.touches[0];
+  if (pressXY && Math.hypot(t.clientX-pressXY.x, t.clientY-pressXY.y) > 12){ clearTimeout(pressTimer); pressTimer = null; }
+}, {passive:true});
+storyBody.addEventListener('touchend', ()=>{ clearTimeout(pressTimer); pressTimer = null; }, {passive:true});
+document.addEventListener('pointerdown', e=>{
+  if (!$('word-pop').contains(e.target) && $('word-pop').classList.contains('show') && !storyBody.contains(e.target)) hideWordPop();
+});
+document.addEventListener('keydown', e=>{ if (e.key === 'Escape'){ hideWordPop(); $('goal-editor').classList.remove('show'); } });
+
+/* =====================================================================
+   PROGRESS — stat tiles + last-7-days bar chart (single hue, validated)
+===================================================================== */
+function renderProgress(){
+  const d = day();
+  const doneCount = Object.keys(S.storiesDone).length;
+  const mathAcc = d.mathT ? Math.round(d.mathC/d.mathT*100) : null;
+  const stats = [
+    ['All-time points', S.totalPoints.toLocaleString(), ''],
+    ['Best streak', S.bestStreak, 'answers in a row'],
+    ['Math level', S.mathLevel + ' / 10', LEVEL_NAMES[S.mathLevel-1]],
+    ['Reading level', S.readLevel + ' / 3', ''],
+    ['Stories finished', doneCount + ' / ' + STORIES.length, ''],
+    ['Math today', d.mathC + ' / ' + d.mathT, mathAcc === null ? 'no questions yet' : mathAcc + '% correct']
+  ];
+  const row = $('stat-row'); row.innerHTML = '';
+  stats.forEach(([lab,val,cap])=>{
+    const s = document.createElement('div');
+    s.className = 'stat';
+    s.innerHTML = '<div class="lab"></div><div class="val"></div><div class="cap"></div>';
+    s.children[0].textContent = lab; s.children[1].textContent = val; s.children[2].textContent = cap;
+    row.appendChild(s);
+  });
+  renderWeekChart();
+}
+function renderWeekChart(){
+  const svg = $('week-chart');
+  const W = svg.clientWidth || 780, H = 220;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  const padL = 8, padR = 8, padB = 28, padT = 24;
+  const days = [];
+  for (let i = 6; i >= 0; i--){
+    const dt = new Date(); dt.setDate(dt.getDate() - i);
+    const k = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+    days.push({ k, label: i === 0 ? 'Today' : dt.toLocaleDateString('en-US', {weekday:'short'}),
+                pts: (S.days[k] && S.days[k].points) || 0 });
+  }
+  const maxV = Math.max(S.goal, Math.max.apply(null, days.map(d=>d.pts)), 10);
+  const iw = (W - padL - padR) / 7;
+  const bw = Math.min(64, iw * 0.55);
+  const y = v => padT + (H - padT - padB) * (1 - v / maxV);
+  let out = '';
+  // goal line (recessive, dashed)
+  const gy = y(S.goal);
+  out += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W-padR) + '" y2="' + gy + '" stroke="#C9D4E5" stroke-dasharray="4 4"/>';
+  out += '<text x="' + (W-padR) + '" y="' + (gy-5) + '" text-anchor="end" font-size="11" fill="#8A96AC">goal ' + S.goal + '</text>';
+  days.forEach((dv, i)=>{
+    const cx = padL + iw*i + iw/2;
+    const x = cx - bw/2;
+    const h = Math.max(dv.pts > 0 ? 4 : 2, (H - padT - padB) * dv.pts / maxV);
+    const top = H - padB - h;
+    const r = Math.min(4, bw/2, h);
+    const fill = dv.pts > 0 ? '#2563EB' : '#E3E9F2';
+    out += '<path class="wbar" data-i="' + i + '" d="M' + x + ',' + (H-padB) +
+      ' L' + x + ',' + (top + r) + ' Q' + x + ',' + top + ' ' + (x+r) + ',' + top +
+      ' L' + (x+bw-r) + ',' + top + ' Q' + (x+bw) + ',' + top + ' ' + (x+bw) + ',' + (top+r) +
+      ' L' + (x+bw) + ',' + (H-padB) + ' Z" fill="' + fill + '"/>';
+    // wider invisible hover target
+    out += '<rect class="whit" data-i="' + i + '" x="' + (padL + iw*i) + '" y="' + padT + '" width="' + iw + '" height="' + (H - padT - padB) + '" fill="transparent"/>';
+    out += '<text x="' + cx + '" y="' + (H-9) + '" text-anchor="middle" font-size="11.5" font-weight="' + (i===6?'700':'400') + '" fill="' + (i===6?'#17233B':'#8A96AC') + '">' + dv.label + '</text>';
+    if (i === 6 && dv.pts > 0){
+      out += '<text x="' + cx + '" y="' + (top-7) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#17233B">' + dv.pts + '</text>';
+    }
+  });
+  svg.innerHTML = out;
+  const tip = $('chart-tip');
+  svg.querySelectorAll('.whit').forEach(hit=>{
+    hit.addEventListener('mousemove', e=>{
+      const i = +hit.dataset.i;
+      tip.textContent = days[i].label + ': ' + days[i].pts + ' pts';
+      const rect = svg.getBoundingClientRect();
+      tip.style.left = (e.clientX - rect.left) + 'px';
+      tip.style.top = (e.clientY - rect.top) + 'px';
+      tip.style.display = 'block';
+    });
+    hit.addEventListener('mouseleave', ()=>{ tip.style.display = 'none'; });
+  });
+}
+window.addEventListener('resize', ()=>{
+  if ($('view-progress').classList.contains('active')) renderWeekChart();
+});
+
+/* ---------------- boot ---------------- */
+renderScoreboard();
+newMathQuestion();
+renderStoryList();
+renderHome();
+</script>
+</body>
+</html>
